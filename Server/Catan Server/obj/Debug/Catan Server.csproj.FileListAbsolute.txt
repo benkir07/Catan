@@ -1,0 +1,20 @@
+G:\Programming\Catan Server\Catan Server\obj\Debug\Catan Server.csprojAssemblyReference.cache
+G:\Programming\Catan Server\Catan Server\obj\Debug\Catan_Server.Properties.Resources.resources
+G:\Programming\Catan Server\Catan Server\obj\Debug\Catan Server.csproj.GenerateResource.cache
+G:\Programming\Catan Server\Catan Server\obj\Debug\Catan Server.csproj.CoreCompileInputs.cache
+G:\Programming\Catan Server\Catan Server\bin\Debug\Catan Server.exe.config
+G:\Programming\Catan Server\Catan Server\bin\Debug\Catan Server.exe
+G:\Programming\Catan Server\Catan Server\bin\Debug\Catan Server.pdb
+G:\Programming\Catan Server\Catan Server\obj\Debug\Catan Server.exe
+G:\Programming\Catan Server\Catan Server\obj\Debug\Catan Server.pdb
+F:\Programming\Catan Server\Catan Server\bin\Debug\Catan Server.exe.config
+F:\Programming\Catan Server\Catan Server\obj\Debug\Catan Server.exe
+F:\Programming\Catan Server\Catan Server\obj\Debug\Catan Server.pdb
+F:\Programming\Catan Server\Catan Server\bin\Debug\Catan Server.exe
+F:\Programming\Catan Server\Catan Server\bin\Debug\Catan Server.pdb
+F:\Programming\Catan Server\Catan Server\obj\Debug\Catan_Server.Properties.Resources.resources
+F:\Programming\Catan Server\Catan Server\obj\Debug\Catan Server.csproj.GenerateResource.Cache
+F:\Programming\Catan Server\Catan Server\obj\Debug\Catan_Server.ServerGUI.resources
+F:\Programming\Catan Server\Catan Server\obj\Debug\Catan Server.csprojAssemblyReference.cache
+F:\Programming\Catan Server\Catan Server\obj\Debug\Catan Server.csproj.CoreCompileInputs.cache
+G:\Programming\Catan Server\Catan Server\obj\Debug\Catan_Server.ServerGUI.resources

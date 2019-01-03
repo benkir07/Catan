@@ -1,10 +1,7 @@
 ﻿using UnityEngine;
-using System.Collections.Generic;
 
 public class Crossroads : SerializableCross
 {
-    public static Dictionary<string, GameObject> buildingsPrefabs { get; } = new Dictionary<string, GameObject>();
-
     new public Road[][] roads { get; set; } = new Road[roadAmount][]
     {
         new Road[roadAmount],
@@ -136,24 +133,13 @@ public class Crossroads : SerializableCross
     {
         if (this.color != null)
             throw new System.Exception("Cannot visalize a place with a building on it.");
-
-        GameObject visual = GameManager.Instantiate(buildingsPrefabs["Village"]);
+        
+        GameObject visual = GameObject.Instantiate(Prefabs.Buildings["Village"], Object.FindObjectOfType<Player>().transform);
         visual.transform.position += offset;
 
         visual.GetComponentInChildren<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 
-        visual.GetComponentInChildren<Renderer>().material = GameManager.tranparents[color];
-        /*
-        material.SetFloat("_Glossiness", 0.5f);
-        material.SetFloat("_Mode", 2);
-        material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-        material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-        material.SetInt("_ZWrite", 0);
-        material.DisableKeyword("_ALPHATEST_ON");
-        material.EnableKeyword("_ALPHABLEND_ON");
-        material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-        material.renderQueue = 3000;
-        */
+        visual.GetComponentInChildren<Renderer>().material = Prefabs.Tranparents[color];
 
         return visual;
     }
@@ -165,9 +151,9 @@ public class Crossroads : SerializableCross
     public override void BuildVillage(Color color)
     {
         base.BuildVillage(color);
-        building = GameManager.Instantiate(buildingsPrefabs["Village"]);
+        building = GameObject.Instantiate(Prefabs.Buildings["Village"], Object.FindObjectOfType<Player>().transform);
         building.transform.position += offset;
-        building.GetComponentInChildren<Renderer>().material = GameManager.colors[color];
+        building.GetComponentInChildren<Renderer>().material = Prefabs.Colors[color];
     }
 
     /// <summary>
@@ -177,8 +163,8 @@ public class Crossroads : SerializableCross
     {
         base.UpgradeToCity();
         GameObject.Destroy(building);
-        building = GameManager.Instantiate(buildingsPrefabs["City"]);
+        building = GameObject.Instantiate(Prefabs.Buildings["City"], Object.FindObjectOfType<Player>().transform);
         building.transform.position += offset;
-        building.GetComponentInChildren<Renderer>().material = GameManager.colors[(Color)color];
+        building.GetComponentInChildren<Renderer>().material = Prefabs.Colors[(Color)color];
     }
 }

@@ -55,7 +55,8 @@ namespace Catan_Server
         /// <returns>The message the player sent</returns>
         public string ReadLine()
         {
-            return readFrom.ReadLine();
+            string data = readFrom.ReadLine();
+            return data;
         }
 
         /// <summary>

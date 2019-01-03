@@ -813,7 +813,6 @@ F:\Programming\Catan\Temp\bin\Debug\UnityEngine.Networking.xml
 F:\Programming\Catan\Temp\bin\Debug\UnityEngine.GoogleAudioSpatializer.xml
 F:\Programming\Catan\Temp\bin\Debug\UnityEngine.HoloLens.xml
 F:\Programming\Catan\Temp\bin\Debug\UnityEngine.SpatialTracking.xml
-F:\Programming\Catan\obj\Debug\Assembly-CSharp.csprojResolveAssemblyReference.cache
 F:\Programming\Catan\obj\Debug\Assembly-CSharp.dll
 F:\Programming\Catan\obj\Debug\Assembly-CSharp.pdb
 G:\Programming\Catan\Temp\bin\Debug\Assembly-CSharp.dll
@@ -1090,3 +1089,6 @@ G:\Programming\Catan\obj\Debug\Assembly-CSharp.csproj.CoreCompileInputs.cache
 G:\Programming\Catan\obj\Debug\Assembly-CSharp.csproj.CopyComplete
 G:\Programming\Catan\obj\Debug\Assembly-CSharp.dll
 G:\Programming\Catan\obj\Debug\Assembly-CSharp.pdb
+F:\Programming\Catan\obj\Debug\Assembly-CSharp.csprojAssemblyReference.cache
+F:\Programming\Catan\obj\Debug\Assembly-CSharp.csproj.CoreCompileInputs.cache
+F:\Programming\Catan\obj\Debug\Assembly-CSharp.csproj.CopyComplete

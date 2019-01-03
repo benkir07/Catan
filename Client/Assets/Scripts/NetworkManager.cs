@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Xml.Serialization;
 using UnityEngine;
 using System.Net.Sockets;
 using System.IO;
@@ -9,16 +8,18 @@ public class NetworkManager : MonoBehaviour {
 
     public string serverIP = "127.0.0.1";
     public int serverPort = 12345;
-    public TcpClient clientSocket { get; } = new TcpClient();
-    public NetworkStream socketStream { get; private set; }
-    public StreamReader socketReader { get; private set; }
-    public StreamWriter socketWriter { get; private set; }
+    private TcpClient clientSocket { get; } = new TcpClient();
+    private NetworkStream socketStream;
+    private StreamReader socketReader;
+    private StreamWriter socketWriter;
 
-    private GameManager gameManager;
+    public int Available = 0;
+
+    private Player player;
 
     private void Start()
     {
-        gameManager = gameObject.GetComponent<GameManager>();
+        player = gameObject.GetComponent<Player>();
 
         try
         {
@@ -45,13 +46,61 @@ public class NetworkManager : MonoBehaviour {
 
     private void Update()
     {
-        if (clientSocket.Available != 0 && !gameManager.enabled)
+        Available = clientSocket.Available;
+
+        if (clientSocket.Available != 0 && !player.enabled)
         {
-            if (socketReader.ReadLine() == "Game Start")
+            if (ReadLine() == "Game Start")
             {
                 GameObject.Find("Wait Message").SetActive(false);
-                gameManager.enabled = true;
+                player.enabled = true;
             }
         }
+    }
+
+    /// <summary>
+    /// Runs as the application closes
+    /// Closes the connection with the server
+    /// </summary>
+    void OnApplicationQuit()
+    {
+        try
+        {
+            clientSocket.Close();
+        }
+        catch
+        {
+
+        }
+    }
+
+    public void WriteLine(string message)
+    {
+        socketWriter.WriteLine(message);
+    }
+
+    public string ReadLine()
+    {
+        string data = socketReader.ReadLine();
+        //print(data);
+        return data;
+    }
+
+    /// <summary>
+    /// Reads an xml object from the socket and deserializes it.
+    /// </summary>
+    /// <typeparam name="T">The type expected to be presented in the xml code</typeparam>
+    /// <returns>The deserialized object</returns>
+    public T Deserialize<T>()
+    {
+        XmlSerializer serializer = new XmlSerializer(typeof(T));
+
+        int len = int.Parse(ReadLine());
+        char[] xmlPlaces = new char[len];
+        socketReader.Read(xmlPlaces, 0, len);
+        ReadLine(); //There is always a spare newline after my way of serialization
+
+        StringReader xml = new StringReader(new string(xmlPlaces));
+        return (T)serializer.Deserialize(xml);
     }
 }

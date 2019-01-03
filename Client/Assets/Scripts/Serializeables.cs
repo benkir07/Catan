@@ -523,5 +523,6 @@ public enum Message
 {
     StartPlace,
     BuildVillage,
-    BuildRoad
+    BuildRoad,
+    AddResource
 }

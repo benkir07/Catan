@@ -1,51 +1,24 @@
 ﻿using System.Linq;
+using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.EventSystems;
 
 class HandManager : MonoBehaviour
 {
-    public Resource[] hand;
+    public List<Resource> hand = new List<Resource>();
     private ResourceCard[] visualHand;
-    private bool zoom = false;
 
     public void Start()
     {
-        GameManager.LoadPrefabs();
-
-        System.Array.Sort(hand);
-        visualHand = ResourceCard.GenerateHand(hand);
+        hand.Sort();
+        visualHand = ResourceCard.GenerateHand(hand, Camera.main.transform);
     }
 
     public void Update()
     {
         if (!hand.SequenceEqual(ResourceCard.Simplize(visualHand)))
         {
-            System.Array.Sort(hand);
-            visualHand = ResourceCard.GenerateHand(hand, visualHand);
-        }
-    }
-
-    public void Zoom(BaseEventData data)
-    {
-        if (!zoom)
-        {
-            foreach (ResourceCard card in visualHand)
-            {
-                card.Zoom();
-            }
-            zoom = true;
-        }
-    }
-
-    public void UnZoom(BaseEventData data)
-    {
-        if (zoom)
-        {
-            foreach (ResourceCard card in visualHand)
-            {
-                card.UnZoom();
-            }
-            zoom = false;
+            hand.Sort();
+            visualHand = ResourceCard.GenerateHand(hand, Camera.main.transform, visualHand);
         }
     }
 }

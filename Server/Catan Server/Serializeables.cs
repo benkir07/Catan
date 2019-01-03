@@ -70,13 +70,15 @@ public class SerializableBoard
     /// </summary>
     public static SerializableBoard RandomBoard()
     {
-        SerializableBoard ret = new SerializableBoard();
-        ret.tiles = new string[MainColumn + 2][][];
-        ret.GenerateTiles();
-        ret.GeneratePorts();
-        ret.crossroads = new SerializableCross[MainColumn * 2 + 2][];
-        ret.GenerateCrossroads();
-        return ret;
+        SerializableBoard board = new SerializableBoard();
+        {
+            board.tiles = new string[MainColumn + 2][][];
+            board.crossroads = new SerializableCross[MainColumn * 2 + 2][];
+        }
+        board.GenerateTiles();
+        board.GeneratePorts();
+        board.GenerateCrossroads();
+        return board;
     }
 
     /// <summary>
@@ -523,5 +525,6 @@ public enum Message
 {
     StartPlace,
     BuildVillage,
-    BuildRoad
+    BuildRoad,
+    AddResource
 }

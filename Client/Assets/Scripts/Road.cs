@@ -1,9 +1,7 @@
 ﻿using UnityEngine;
-using System.Collections.Generic;
 
 public class Road : SerializableRoad
 {
-    public static Dictionary<string, GameObject> roadsPrefabs { get; } = new Dictionary<string, GameObject>();
     new public Crossroads leftCross
     {
         get
@@ -66,12 +64,12 @@ public class Road : SerializableRoad
         if (this.color != null)
             throw new System.Exception("Cannot visalize a road with a building on it.");
 
-        GameObject visual = GameManager.Instantiate(roadsPrefabs[this.type.ToString()]);
+        GameObject visual = GameObject.Instantiate(Prefabs.Roads[this.type.ToString()], Object.FindObjectOfType<Player>().transform);
         visual.transform.position += offset;
 
         visual.GetComponentInChildren<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 
-        visual.GetComponentInChildren<Renderer>().material = GameManager.tranparents[color];
+        visual.GetComponentInChildren<Renderer>().material = Prefabs.Tranparents[color];
 
         return visual;
     }
@@ -83,9 +81,9 @@ public class Road : SerializableRoad
     public override void Build(Color color)
     {
         base.Build(color);
-        road = GameManager.Instantiate(roadsPrefabs[type.ToString()]);
+        road = GameObject.Instantiate(Prefabs.Roads[type.ToString()], Object.FindObjectOfType<Player>().transform);
         road.transform.position += offset;
-        road.GetComponentInChildren<Renderer>().material = GameManager.colors[color];
+        road.GetComponentInChildren<Renderer>().material = Prefabs.Colors[color];
     }
 
     /// <summary>

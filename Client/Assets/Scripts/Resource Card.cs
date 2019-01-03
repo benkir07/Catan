@@ -1,40 +1,29 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
+using System.Collections.Generic;
 
 class ResourceCard
 {
     private const int angel = 5;
     private const float xOffset = 0.1f;
     private const float yOffset = 0.03f;
-    private static float yZoom = -0.2f;
 
-    public static Dictionary<Resource, Sprite> cardImages = new Dictionary<Resource, Sprite>();
     public static GameObject cardPrefab;
 
     private Resource resource { get; }
     public GameObject gameObject { get; }
 
 
-    public ResourceCard(Resource resource, Vector3 position, Vector3 rotation)
+    public ResourceCard(Resource resource, Transform parent, Vector3 position, Vector3 rotation)
     {
         this.resource = resource;
-        gameObject = GameObject.Instantiate(cardPrefab, Camera.main.transform);
+        gameObject = GameObject.Instantiate(cardPrefab, parent);
         gameObject.tag = "Card";
-        gameObject.GetComponent<SpriteRenderer>().sprite = cardImages[resource];
+        gameObject.GetComponent<SpriteRenderer>().sprite = Prefabs.ResourceCards[resource];
         gameObject.transform.position += position;
         gameObject.transform.eulerAngles += rotation;
     }
 
-    public void Zoom()
-    {
-        this.gameObject.transform.position -= new Vector3(0, yZoom);
-    }
-    public void UnZoom()
-    {
-        this.gameObject.transform.position += new Vector3(0, yZoom);
-    }
-
-    public static ResourceCard[] GenerateHand(Resource[] cardsInHand, ResourceCard[] oldHand = null)
+    public static ResourceCard[] GenerateHand(List<Resource> cardsInHand, Transform parent, ResourceCard[] oldHand = null)
     {
         if (oldHand != null)
         {
@@ -44,18 +33,18 @@ class ResourceCard
             }
         }
 
-        int angelOffset = - angel * (cardsInHand.Length / 2);
-        float curXOffset = xOffset * (cardsInHand.Length / 2);
-        float curYOffset = - yOffset * (cardsInHand.Length / 2);
+        int angelOffset = - angel * (cardsInHand.Count / 2);
+        float curXOffset = xOffset * (cardsInHand.Count / 2);
+        float curYOffset = - yOffset * (cardsInHand.Count / 2);
 
-        ResourceCard[] currHand = new ResourceCard[cardsInHand.Length];
-        for (int i = 0; i < cardsInHand.Length; i++)
+        ResourceCard[] currHand = new ResourceCard[cardsInHand.Count];
+        for (int i = 0; i < cardsInHand.Count; i++)
         {
-            currHand[i] = new ResourceCard(cardsInHand[i], new Vector3(curXOffset, curYOffset), new Vector3(0, 0, angelOffset));
+            currHand[i] = new ResourceCard(cardsInHand[i], parent, new Vector3(curXOffset, curYOffset), new Vector3(0, 0, angelOffset));
             currHand[i].gameObject.GetComponent<SpriteRenderer>().sortingOrder = i;
             angelOffset += angel;
             curXOffset -= xOffset;
-            if (i < cardsInHand.Length / 2)
+            if (i < cardsInHand.Count / 2)
                 curYOffset += yOffset;
             else
                 curYOffset -= yOffset;

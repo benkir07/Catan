@@ -5,8 +5,6 @@ using System.Collections.Generic;
 
 public class Tile
 {
-    public static Dictionary<string, GameObject> tilesPrefabs = new Dictionary<string, GameObject>();
-
     public TileType type { get; }
     protected GameObject tile;
     protected int _column { get; }
@@ -58,7 +56,7 @@ public class Tile
         {
             Vector3 offset = CalculateOffset(_column, _row);
 
-            tile = GameManager.Instantiate(tilesPrefabs[modelName]);
+            tile = GameObject.Instantiate(Prefabs.Tiles[modelName], UnityEngine.Object.FindObjectOfType<Player>().transform);
             tile.transform.position += offset;
         }
         else

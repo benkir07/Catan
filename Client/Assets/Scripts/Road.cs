@@ -2,14 +2,14 @@
 
 public class Road : SerializableRoad
 {
-    new public Crossroads leftCross
+    new public Crossroads LeftCross
     {
         get
         {
             return (Crossroads)_leftCross;
         }
     }
-    new public Crossroads rightCross
+    new public Crossroads RightCross
     {
         get
         {
@@ -17,54 +17,54 @@ public class Road : SerializableRoad
         }
     }
 
-    public GameObject road { get; internal set; }
+    public GameObject Building { get; internal set; }
     private Vector3 offset;
-    private RoadType type { get; }
+    private RoadType Type { get; }
 
     /// <summary>
-    /// Creates a road and calculates its placement
+    /// Creates a Building and calculates its placement
     /// </summary>
     /// <param name="cross1"></param>
-    /// <param name="type"></param>
-    public Road(Crossroads cross1, RoadType type) : base(cross1)
+    /// <param name="Type"></param>
+    public Road(Crossroads cross1, RoadType Type) : base(cross1)
     {
-        this.type = type;
+        this.Type = Type;
     }
 
     /// <summary>
-    /// Gets the other side of the road
+    /// Gets the other side of the Building
     /// </summary>
     /// <param name="c">The current crossroad</param>
     /// <returns>The other crossroad</returns>
     public Crossroads GetOtherCross(Crossroads c)
     {
-        if (c == leftCross)
-            return rightCross;
-        return leftCross;
+        if (c == LeftCross)
+            return RightCross;
+        return LeftCross;
     }
 
     /// <summary>
-    /// Sets the road's second crossroad and calculates the road's offset based on that
+    /// Sets the Building's second crossroad and calculates the Building's offset based on that
     /// </summary>
     /// <param name="value">The second crossroad</param>
     public void SetSecondCross(Crossroads value)
     {
         base.SetSecondCross(value);
-        offset = (leftCross.offset + rightCross.offset) / 2; //Average of the two crosses
+        offset = (LeftCross.Offset + RightCross.Offset) / 2; //Average of the two crosses
     }
 
     /// <summary>
-    /// Visalizes a theoretical road for the player to choose from when placing
+    /// Visalizes a theoretical Building for the player to choose from when placing
     /// </summary>
     /// <param name="transpareny">the tranparency precentage of the visual</param>
-    /// <param name="color">the color to visualize the road</param>
+    /// <param name="color">the color to visualize the Building</param>
     /// <returns>the visual's game object</returns>
     public GameObject Visualize(Color color)
     {
-        if (this.color != null)
-            throw new System.Exception("Cannot visalize a road with a building on it.");
+        if (this.Color != null)
+            throw new System.Exception("Cannot visalize a Building with a Building on it.");
 
-        GameObject visual = GameObject.Instantiate(Prefabs.Roads[this.type.ToString()], Object.FindObjectOfType<Player>().transform);
+        GameObject visual = GameObject.Instantiate(Prefabs.Roads[this.Type.ToString()], Object.FindObjectOfType<Player>().transform);
         visual.transform.position += offset;
 
         visual.GetComponentInChildren<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
@@ -75,15 +75,15 @@ public class Road : SerializableRoad
     }
 
     /// <summary>
-    /// Places a road object in this road's place
+    /// Places a Building object in this Building's place
     /// </summary>
-    /// <param name="color">color name of the road (Red, Blue, White, Yellow)</param>
+    /// <param name="color">color name of the Building (Red, Blue, White, Yellow)</param>
     public override void Build(Color color)
     {
         base.Build(color);
-        road = GameObject.Instantiate(Prefabs.Roads[type.ToString()], Object.FindObjectOfType<Player>().transform);
-        road.transform.position += offset;
-        road.GetComponentInChildren<Renderer>().material = Prefabs.Colors[color];
+        Building = GameObject.Instantiate(Prefabs.Roads[Type.ToString()], Object.FindObjectOfType<Player>().transform);
+        Building.transform.position += offset;
+        Building.GetComponentInChildren<Renderer>().material = Prefabs.Colors[color];
     }
 
     /// <summary>
@@ -92,7 +92,7 @@ public class Road : SerializableRoad
     /// <returns></returns>
     public override string ToString()
     {
-        return base.ToString() + " of type: " + type;
+        return base.ToString() + " of Type: " + Type;
     }
 }
 

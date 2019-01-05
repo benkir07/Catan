@@ -2,27 +2,27 @@
 
 public class Crossroads : SerializableCross
 {
-    new public Road[][] roads { get; set; } = new Road[roadAmount][]
+    new public Road[][] Roads { get; set; } = new Road[roadAmount][]
     {
         new Road[roadAmount],
         new Road[roadAmount]
     };//[right/left][up/down/straight] --> [0][0] left down, [1][1] right up
 
-    public GameObject building { get; internal set; }
-    public Vector3 offset { get; }
+    public GameObject Building { get; internal set; }
+    public Vector3 Offset { get; }
 
     /// <summary>
     /// Creates a new crossroad and calculates its placement
     /// </summary>
-    /// <param name="column">The crossroad's column</param>
-    /// <param name="row">The crossroad's row</param>
+    /// <param name="Column">The crossroad's Column</param>
+    /// <param name="Row">The crossroad's Row</param>
     /// <param name="leftDown">The road to the down left of the crossroad</param>
     /// <param name="leftUp">The road to the up left of the crossroad</param>
-    public Crossroads(int column, int row, Road leftDown = null, Road leftUp = null) : base(column, row, leftDown, leftUp) //Every crossroad will initiate its right roads and get its left row from the constructor
+    public Crossroads(int Column, int Row, Road leftDown = null, Road leftUp = null) : base(Column, Row, leftDown, leftUp) //Every crossroad will initiate its right Roads and get its left Row from the constructor
     {
-        building = null;
+        Building = null;
 
-        offset = CalculateOffset(this.column, this.row);
+        Offset = CalculateOffset(this.Column, this.Row);
 
         SetRoads(leftDown, leftUp);
     }
@@ -36,61 +36,61 @@ public class Crossroads : SerializableCross
     /// <param name="leftUp">The road to the up left of the crossroads</param>
     public Crossroads(SerializableCross parent, Road leftDown = null, Road leftUp = null)
     {
-        this.column = parent.column;
-        this.row = parent.row;
-        this.isCity = false;
-        this.color = null;
+        this.Column = parent.Column;
+        this.Row = parent.Row;
+        this.IsCity = false;
+        this.Color = null;
 
-        offset = CalculateOffset(this.column, this.row);
+        Offset = CalculateOffset(this.Column, this.Row);
 
-        if (parent.color == null)
-            building = null;
+        if (parent.Color == null)
+            Building = null;
         else
-            BuildVillage((Color)parent.color);
-        if (parent.isCity)
+            BuildVillage((Color)parent.Color);
+        if (parent.IsCity)
             UpgradeToCity();
 
         SetRoads(leftDown, leftUp);
 
         for (int i = 0; i < roadAmount; i++)
         {
-            SerializableRoad tempRoad = parent.roads[leftRoad][i];
-            if (tempRoad != null && tempRoad.color != null)
-                roads[leftRoad][i].Build((Color)tempRoad.color);
+            SerializableRoad tempRoad = parent.Roads[leftRoad][i];
+            if (tempRoad != null && tempRoad.Color != null)
+                Roads[leftRoad][i].Build((Color)tempRoad.Color);
         }
     }
 
     /// <summary>
-    /// Sets the left roads to their relevant place and Creates new roads to the right
+    /// Sets the left Roads to their relevant place and Creates new Roads to the right
     /// </summary>
     /// <param name="leftDown">The road to the left and down of the crossroad</param>
     /// <param name="leftUp">The road to the left and up of the crossroad</param>
     private void SetRoads(Road leftDown, Road leftUp) 
     {
-        if (column % 2 == 0)
+        if (Column % 2 == 0)
         {
-            roads[leftRoad][straightRoad] = leftDown;
+            Roads[leftRoad][straightRoad] = leftDown;
 
-            if (SerializableBoard.MainColumn > column || row > 0)
-                roads[rightRoad][downRoad] = new Road(this, RoadType.DownToRightRoad); //right down
+            if (SerializableBoard.MainColumn > Column || Row > 0)
+                Roads[rightRoad][downRoad] = new Road(this, RoadType.DownToRightRoad); //right down
             else
-                roads[rightRoad][downRoad] = null;
+                Roads[rightRoad][downRoad] = null;
 
-            if (SerializableBoard.MainColumn > column || (column - SerializableBoard.MainColumn) / 2 + row < SerializableBoard.MainColumn)
-                roads[rightRoad][upRoad] = new Road(this, RoadType.UpToRightRoad); //right up
+            if (SerializableBoard.MainColumn > Column || (Column - SerializableBoard.MainColumn) / 2 + Row < SerializableBoard.MainColumn)
+                Roads[rightRoad][upRoad] = new Road(this, RoadType.UpToRightRoad); //right up
             else
-                roads[rightRoad][upRoad] = null;
+                Roads[rightRoad][upRoad] = null;
         }
         else
         {
-            roads[leftRoad][downRoad] = leftDown;
+            Roads[leftRoad][downRoad] = leftDown;
 
-            roads[leftRoad][upRoad] = leftUp;
+            Roads[leftRoad][upRoad] = leftUp;
 
-            if (column < SerializableBoard.MainColumn * 2 + 1)
-                roads[rightRoad][straightRoad] = new Road(this, RoadType.StraightRoad); //straight right
+            if (Column < SerializableBoard.MainColumn * 2 + 1)
+                Roads[rightRoad][straightRoad] = new Road(this, RoadType.StraightRoad); //straight right
             else
-                roads[rightRoad][straightRoad] = null;
+                Roads[rightRoad][straightRoad] = null;
 
         }
 
@@ -101,20 +101,20 @@ public class Crossroads : SerializableCross
     }
 
     /// <summary>
-    /// Calculates a crossroad offset based on column and row.
+    /// Calculates a crossroad Offset based on Column and Row.
     /// </summary>
-    /// <param name="column">The crossroad's column</param>
-    /// <param name="row">The crossroad's row</param>
-    /// <returns>The crossroad's offset to add</returns>
-    private static Vector3 CalculateOffset(int column, int row) 
+    /// <param name="Column">The crossroad's Column</param>
+    /// <param name="Row">The crossroad's Row</param>
+    /// <returns>The crossroad's Offset to add</returns>
+    private static Vector3 CalculateOffset(int Column, int Row) 
     {
-        float x = (column - SerializableBoard.MainColumn) / 2;
-        float z = Mathf.Abs(SerializableBoard.MainColumn - column) / 4f + row;
-        if (column % 2 == 0)
+        float x = (Column - SerializableBoard.MainColumn) / 2;
+        float z = Mathf.Abs(SerializableBoard.MainColumn - Column) / 4f + Row;
+        if (Column % 2 == 0)
         {
             x -= 1f / 3f;
             z += 1f / 4f;
-            if (column > SerializableBoard.MainColumn)
+            if (Column > SerializableBoard.MainColumn)
             {
                 x++;
                 z -= 1f / 2f;
@@ -131,11 +131,11 @@ public class Crossroads : SerializableCross
     /// <returns>the visual's game object</returns>
     public GameObject Visualize(Color color)
     {
-        if (this.color != null)
-            throw new System.Exception("Cannot visalize a place with a building on it.");
+        if (this.Color != null)
+            throw new System.Exception("Cannot visalize a place with a Building on it.");
         
         GameObject visual = GameObject.Instantiate(Prefabs.Buildings["Village"], Object.FindObjectOfType<Player>().transform);
-        visual.transform.position += offset;
+        visual.transform.position += Offset;
 
         visual.GetComponentInChildren<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 
@@ -151,9 +151,9 @@ public class Crossroads : SerializableCross
     public override void BuildVillage(Color color)
     {
         base.BuildVillage(color);
-        building = GameObject.Instantiate(Prefabs.Buildings["Village"], Object.FindObjectOfType<Player>().transform);
-        building.transform.position += offset;
-        building.GetComponentInChildren<Renderer>().material = Prefabs.Colors[color];
+        Building = GameObject.Instantiate(Prefabs.Buildings["Village"], Object.FindObjectOfType<Player>().transform);
+        Building.transform.position += Offset;
+        Building.GetComponentInChildren<Renderer>().material = Prefabs.Colors[color];
     }
 
     /// <summary>
@@ -162,9 +162,9 @@ public class Crossroads : SerializableCross
     public override void UpgradeToCity() 
     {
         base.UpgradeToCity();
-        GameObject.Destroy(building);
-        building = GameObject.Instantiate(Prefabs.Buildings["City"], Object.FindObjectOfType<Player>().transform);
-        building.transform.position += offset;
-        building.GetComponentInChildren<Renderer>().material = Prefabs.Colors[(Color)color];
+        GameObject.Destroy(Building);
+        Building = GameObject.Instantiate(Prefabs.Buildings["City"], Object.FindObjectOfType<Player>().transform);
+        Building.transform.position += Offset;
+        Building.GetComponentInChildren<Renderer>().material = Prefabs.Colors[(Color)Color];
     }
 }

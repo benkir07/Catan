@@ -8,26 +8,26 @@ namespace Catan_Server
 {
     class Player
     {
-        static XmlSerializer serializer = new XmlSerializer(typeof(List<int[]>));
+        private static XmlSerializer Serializer { get; } = new XmlSerializer(typeof(List<int[]>));
 
-        public TcpClient socket { get; }
+        public TcpClient Socket { get; }
         public int CharsToRead
         {
             get
             {
-                return socket.Available;
+                return Socket.Available;
             }
         }
         public EndPoint IPPort
         {
             get
             {
-                return socket.Client.RemoteEndPoint;
+                return Socket.Client.RemoteEndPoint;
             }
         } 
-        public Color color { get; }
-        private StreamReader readFrom { get; }
-        private StreamWriter writeTo { get; }
+        public Color Color { get; }
+        private StreamReader ReadFrom { get; }
+        private StreamWriter WriteTo { get; }
 
         /// <summary>
         /// Initializes a new Player object representing a player in a game.
@@ -36,17 +36,17 @@ namespace Catan_Server
         /// <param name="color">The player's color</param>
         public Player(TcpClient socket, Color color)
         {
-            this.socket = socket;
-            this.color = color;
+            this.Socket = socket;
+            this.Color = color;
 
-            readFrom = new StreamReader(socket.GetStream());
-            writeTo = new StreamWriter(socket.GetStream());
+            ReadFrom = new StreamReader(socket.GetStream());
+            WriteTo = new StreamWriter(socket.GetStream());
             {
-                writeTo.AutoFlush = true;
+                WriteTo.AutoFlush = true;
             }
 
-            writeTo.WriteLine("Game Start");
-            writeTo.WriteLine(color);
+            WriteTo.WriteLine("Game Start");
+            WriteTo.WriteLine(color);
         }
 
         /// <summary>
@@ -55,7 +55,7 @@ namespace Catan_Server
         /// <returns>The message the player sent</returns>
         public string ReadLine()
         {
-            string data = readFrom.ReadLine();
+            string data = ReadFrom.ReadLine();
             return data;
         }
 
@@ -65,7 +65,7 @@ namespace Catan_Server
         /// <param name="message">The message to send</param>
         public void WriteLine(string message)
         {
-            writeTo.WriteLine(message);
+            WriteTo.WriteLine(message);
         }
 
         /// <summary>
@@ -77,8 +77,8 @@ namespace Catan_Server
             StringWriter xml = new StringWriter();
             XmlSerializer serializer = new XmlSerializer(toSend.GetType());
             serializer.Serialize(xml, toSend);
-            writeTo.WriteLine(xml.ToString().Length);
-            writeTo.WriteLine(xml.ToString());
+            WriteTo.WriteLine(xml.ToString().Length);
+            WriteTo.WriteLine(xml.ToString());
         }
 
         /// <summary>
@@ -86,8 +86,8 @@ namespace Catan_Server
         /// </summary>
         public void Close()
         {
-            Server.gui.EnterLog(IPPort + " Disconnected");
-            socket.Close();
+            Server.Gui.EnterLog(IPPort + " Disconnected");
+            Socket.Close();
         }
     }
 }

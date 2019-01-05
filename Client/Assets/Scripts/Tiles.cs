@@ -5,10 +5,10 @@ using System.Collections.Generic;
 
 public class Tile
 {
-    public TileType type { get; }
-    protected GameObject tile;
-    protected int _column { get; }
-    protected int _row { get; }
+    public TileType Type { get; }
+    public GameObject GameObject { get; protected set; }
+    protected int Column { get; }
+    protected int Row { get; }
 
     /// <summary>
     /// Calculates the offset placing of the tile based on its column and row
@@ -33,17 +33,17 @@ public class Tile
     /// <summary>
     /// Creates a new tile object and places it in world
     /// </summary>
-    /// <param name="type">The tile type</param>
+    /// <param name="Type">The tile Type</param>
     /// <param name="column">The tile's column</param>
     /// <param name="row">The tile's row</param>
-    public Tile(TileType type, int column, int row)
+    public Tile(TileType Type, int column, int row)
     {
-        this.type = type;
-        _row = row;
-        _column = column;
+        this.Type = Type;
+        this.Row = row;
+        this.Column = column;
 
-        if (type == TileType.Desert || type == TileType.Water)
-            Place(type.ToString()); //Children of this object will have their own place ways.
+        if (Type == TileType.Desert || Type == TileType.Water)
+            Place(Type.ToString()); //Children of this object will have their own place ways.
     }
 
     /// <summary>
@@ -52,12 +52,12 @@ public class Tile
     /// <param name="modelName">The prefab to use</param>
     protected void Place(string modelName)
     {
-        if (tile == null)
+        if (GameObject == null)
         {
-            Vector3 offset = CalculateOffset(_column, _row);
+            Vector3 offset = CalculateOffset(Column, Row);
 
-            tile = GameObject.Instantiate(Prefabs.Tiles[modelName], UnityEngine.Object.FindObjectOfType<Player>().transform);
-            tile.transform.position += offset;
+            GameObject = GameObject.Instantiate(Prefabs.Tiles[modelName], UnityEngine.Object.FindObjectOfType<Player>().transform);
+            GameObject.transform.position += offset;
         }
         else
         {
@@ -71,39 +71,39 @@ public class Tile
     /// <returns></returns>
     public override string ToString()
     {
-        return type.ToString();
+        return Type.ToString();
     }
 }
 
 public class ResourceTile : Tile
 {
-    private int num;
-    private Resource producing { get; }
+    private int Num { get; }
+    private Resource Producing { get; }
 
     /// <summary>
     /// Creates a new resource producing tile object and places it in world
     /// </summary>
-    /// <param name="type"></param>
+    /// <param name="Type"></param>
     /// <param name="numToken">The number on the tile</param>
     /// <param name="column"></param>
     /// <param name="row"></param>
-    public ResourceTile(string type, string numToken, int column, int row) : base(TileType.Resource, column, row)
+    public ResourceTile(string Type, string numToken, int column, int row) : base(TileType.Resource, column, row)
     {
-        producing = (Resource)Enum.Parse(typeof(Resource), type);
+        Producing = (Resource)Enum.Parse(typeof(Resource), Type);
 
-        Place(producing.ToString());
+        Place(Producing.ToString());
 
-        num = int.Parse(numToken);
-        GameObject numberToken = tile.transform.GetChild(0).GetChild(0).gameObject;
+        Num = int.Parse(numToken);
+        GameObject numberToken = GameObject.transform.GetChild(0).GetChild(0).gameObject;
         numberToken.GetComponent<Renderer>().material.color = new Color32(192, 160, 75, 255);
 
         Component[] textComponents = numberToken.transform.GetChild(0).GetComponents(typeof(TextMeshPro));
         TextMeshPro text = (TextMeshPro)textComponents[0];
-        if (num == 6 || num == 9)
+        if (Num == 6 || Num == 9)
         {
             numToken += ".";
         }
-        if (num == 6 || num == 8)
+        if (Num == 6 || Num == 8)
         {
             text.faceColor = new UnityEngine.Color(200, 0, 0);
         }
@@ -116,7 +116,7 @@ public class ResourceTile : Tile
     /// <returns></returns>
     public override string ToString()
     {
-        return producing + " " + num;
+        return Producing + " " + Num;
     }
 }
 
@@ -124,7 +124,7 @@ public class Port : Tile
 {
     public static Dictionary<string, GameObject> portsPrefabs = new Dictionary<string, GameObject>();
 
-    private Resource? product { get; }
+    private Resource? Product { get; }
 
     /// <summary>
     /// Creates a new port tile object and places it in world
@@ -135,14 +135,14 @@ public class Port : Tile
     /// <param name="row">The row of the tile</param>
     public Port(Resource? resource, int angel, int column, int row) : base(TileType.Port, column, row)
     {
-        product = resource;
+        Product = resource;
 
-        if (product == null)
+        if (Product == null)
             Place("GenericPort");
         else
-            Place(product.ToString() + "Port");
+            Place(Product.ToString() + "Port");
 
-        tile.transform.eulerAngles = new Vector3(0, angel, 0);
+        GameObject.transform.eulerAngles = new Vector3(0, angel, 0);
     }
 
     /// <summary>
@@ -151,7 +151,7 @@ public class Port : Tile
     /// <returns></returns>
     public override string ToString()
     {
-        return product.ToString() + " Port";
+        return Product.ToString() + " Port";
     }
 }
 

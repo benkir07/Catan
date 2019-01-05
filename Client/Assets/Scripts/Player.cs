@@ -76,53 +76,64 @@ public partial class Player : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Handles a message got from the server
+    /// </summary>
+    /// <param name="message">The message to handle</param>
     private void HandleMessage(Message message)
     {
         switch (message)
         {
             case Message.StartPlace:
-                List<int[]> places = network.Deserialize<List<int[]>>();
-                VisualizeVillages(places);
-                state = State.StartVisualized;
-                break;
-
+                {
+                    List<int[]> places = network.Deserialize<List<int[]>>();
+                    VisualizeVillages(places);
+                    state = State.StartVisualized;
+                    break;
+                }
             case Message.BuildVillage:
             case Message.BuildRoad:
-                Color color = (Color)Enum.Parse(typeof(Color), network.ReadLine());
-                int col = int.Parse(network.ReadLine());
-                int row = int.Parse(network.ReadLine());
-                Crossroads crossroad = board.crossroads[col][row];
-                if (message == Message.BuildVillage)
                 {
-                    crossroad.BuildVillage(color);
+                    Color color = (Color)Enum.Parse(typeof(Color), network.ReadLine());
+                    int col = int.Parse(network.ReadLine());
+                    int row = int.Parse(network.ReadLine());
+                    Crossroads crossroad = board.Crossroads[col][row];
+                    if (message == Message.BuildVillage)
+                    {
+                        crossroad.BuildVillage(color);
 
-                    if (state == State.StartSelected)
-                    {
-                        GameObject visuals = new GameObject("Visuals Parent");
-                        visuals.transform.parent = transform;
-                        VisualizeRoads(crossroad, visuals);
-                        state = State.StartVisualized;
+                        if (state == State.StartSelected)
+                        {
+                            GameObject visuals = new GameObject("Visuals Parent");
+                            visuals.transform.parent = transform;
+                            VisualizeRoads(crossroad, visuals);
+                            state = State.StartVisualized;
+                        }
                     }
-                }
-                else if (message == Message.BuildRoad)
-                {
-                    int rightLeft = int.Parse(network.ReadLine());
-                    int upDown = int.Parse(network.ReadLine());
-                    crossroad.roads[rightLeft][upDown].Build(color);
-                    if (state == State.StartSelected)
+                    else if (message == Message.BuildRoad)
                     {
-                        state = null;
+                        int rightLeft = int.Parse(network.ReadLine());
+                        int upDown = int.Parse(network.ReadLine());
+                        crossroad.Roads[rightLeft][upDown].Build(color);
+                        if (state == State.StartSelected)
+                        {
+                            state = null;
+                        }
                     }
+                    break;
                 }
-                break;
             case Message.AddResource:
-                Color player = (Color)Enum.Parse(typeof(Color), network.ReadLine());
-                Resource resource = (Resource)Enum.Parse(typeof(Resource), network.ReadLine());
-                if (player == this.color)
                 {
-                    cardsInHand.hand.Add(resource);
+                    Color player = (Color)Enum.Parse(typeof(Color), network.ReadLine());
+                    int col = int.Parse(network.ReadLine());
+                    int row = int.Parse(network.ReadLine());
+                    Resource resource = (Resource)Enum.Parse(typeof(Resource), network.ReadLine());
+                    if (player == this.color)
+                    {
+                        cardsInHand.AddCard(resource, board.Tiles[col][row]); //Temporary!!
+                    }
+                    break;
                 }
-                break;
         }
     }
 
@@ -136,7 +147,7 @@ public partial class Player : MonoBehaviour
         visuals.transform.parent = transform;
         foreach (int[] place in places)
         {
-            GameObject visual = board.crossroads[place[0]][place[1]].Visualize((Color)this.color);
+            GameObject visual = board.Crossroads[place[0]][place[1]].Visualize((Color)this.color);
             visual.name = place[0] + " " + place[1];
             visual.transform.parent = visuals.transform;
             visual.transform.GetChild(0).gameObject.AddComponent(typeof(CapsuleCollider));
@@ -144,16 +155,21 @@ public partial class Player : MonoBehaviour
         }
     }
 
-    private void VisualizeRoads(Crossroads crossroads, GameObject visualsParent)
+    /// <summary>
+    /// Visualizes roads able to be built
+    /// </summary>
+    /// <param name="crossroads">The crossroad to surround with (up to 3) visual roads</param>
+    /// <param name="visualsParent">The visual parent</param>
+    private void VisualizeRoads(Crossroads crossroad, GameObject visualsParent)
     {
         for (int rightLeft = 0; rightLeft < 2; rightLeft++)
         {
             for (int upDown = 0; upDown < 2; upDown++)
             {
-                if (crossroads.roads[rightLeft][upDown] != null)
+                if (crossroad.Roads[rightLeft][upDown] != null)
                 {
-                    GameObject visual = crossroads.roads[rightLeft][upDown].Visualize((Color)this.color);
-                    visual.name = crossroads.column + " " + crossroads.row + "," + rightLeft + " " + upDown;
+                    GameObject visual = crossroad.Roads[rightLeft][upDown].Visualize((Color)this.color);
+                    visual.name = crossroad.Column + " " + crossroad.Row + "," + rightLeft + " " + upDown;
                     visual.transform.parent = visualsParent.transform;
                     visual.transform.GetChild(0).gameObject.AddComponent(typeof(BoxCollider));
                     visual.tag = "Visual";

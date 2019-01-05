@@ -8,22 +8,31 @@ public class NetworkManager : MonoBehaviour {
 
     public string serverIP = "127.0.0.1";
     public int serverPort = 12345;
-    private TcpClient clientSocket { get; } = new TcpClient();
+    private TcpClient ClientSocket { get; } = new TcpClient();
     private NetworkStream socketStream;
     private StreamReader socketReader;
     private StreamWriter socketWriter;
 
-    public int Available = 0;
+    public int Available
+    {
+        get
+        {
+            return ClientSocket.Available;
+        }
+    }
 
     private Player player;
 
+    /// <summary>
+    /// Runs as the program starts, connects to the server.
+    /// </summary>
     private void Start()
     {
         player = gameObject.GetComponent<Player>();
 
         try
         {
-            clientSocket.Connect(IPAddress.Parse(serverIP), serverPort);
+            ClientSocket.Connect(IPAddress.Parse(serverIP), serverPort);
         }
         catch
         {
@@ -36,7 +45,7 @@ public class NetworkManager : MonoBehaviour {
             return;
         }
 
-        socketStream = clientSocket.GetStream();
+        socketStream = ClientSocket.GetStream();
         socketReader = new StreamReader(socketStream);
         socketWriter = new StreamWriter(socketStream)
         {
@@ -44,11 +53,12 @@ public class NetworkManager : MonoBehaviour {
         };
     }
 
+    /// <summary>
+    /// Runs every tick, waits for server to say ready for game start
+    /// </summary>
     private void Update()
     {
-        Available = clientSocket.Available;
-
-        if (clientSocket.Available != 0 && !player.enabled)
+        if (ClientSocket.Available != 0 && !player.enabled)
         {
             if (ReadLine() == "Game Start")
             {
@@ -66,7 +76,7 @@ public class NetworkManager : MonoBehaviour {
     {
         try
         {
-            clientSocket.Close();
+            ClientSocket.Close();
         }
         catch
         {
@@ -74,11 +84,19 @@ public class NetworkManager : MonoBehaviour {
         }
     }
 
+    /// <summary>
+    /// Writes a message to the server
+    /// </summary>
+    /// <param name="message">The message to write</param>
     public void WriteLine(string message)
     {
         socketWriter.WriteLine(message);
     }
 
+    /// <summary>
+    /// Reads a message from the server
+    /// </summary>
+    /// <returns>The message</returns>
     public string ReadLine()
     {
         string data = socketReader.ReadLine();

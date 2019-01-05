@@ -4,8 +4,8 @@ using System.Collections.Generic;
 public class SerializableBoard
 {
     public const int TileType = 0;
-    public const int ResourceType = 1; // for port and resource tiles
-    public const int TileNum = 2; // for resource tiles
+    public const int ResourceType = 1; // for port and resource Tiles
+    public const int TileNum = 2; // for resource Tiles
     public const int PortAngel = 2;
     public const int MainColumn = 5;
     public const int SmallColumn = 3;
@@ -14,7 +14,7 @@ public class SerializableBoard
     public static int[] portAngels = { 0, 60, 60, 120, 180, 180, 240, 300, 300 };
 
     #region Amounts To Place Dictionaries
-    Dictionary<string, int> tilesToPlace = new Dictionary<string, int>()
+    Dictionary<string, int> TilesToPlace { get; } = new Dictionary<string, int>()
         {
             {"Wood", 4 },
             {"Sheep", 4 },
@@ -23,7 +23,7 @@ public class SerializableBoard
             {"Ore", 3 },
             {"Desert", 1 }
         };
-    Dictionary<string, int> numbersToPlace = new Dictionary<string, int>()
+    Dictionary<string, int> NumbersToPlace { get; } = new Dictionary<string, int>()
         {
             {"2", 1 },
             {"3", 2 },
@@ -36,7 +36,7 @@ public class SerializableBoard
             {"11", 2 },
             {"12", 1}
         };
-    Dictionary<string, int> portsToPlace = new Dictionary<string, int>()
+    Dictionary<string, int> PortsToPlace { get; } = new Dictionary<string, int>()
         {
             {"Wood", 1 },
             {"Sheep", 1 },
@@ -46,8 +46,8 @@ public class SerializableBoard
             {"Generic", 4 }
         };
     #endregion
-    public string[][][] tiles { get; set; }
-    public SerializableCross[][] crossroads { get; set; }
+    public string[][][] Tiles { get; set; }
+    public SerializableCross[][] Crossroads { get; set; }
 
     /// <summary>
     /// Randomizes a key with a nonzero value.
@@ -70,15 +70,15 @@ public class SerializableBoard
     /// </summary>
     public static SerializableBoard RandomBoard()
     {
-        SerializableBoard board = new SerializableBoard();
+        SerializableBoard ret = new SerializableBoard();
         {
-            board.tiles = new string[MainColumn + 2][][];
-            board.crossroads = new SerializableCross[MainColumn * 2 + 2][];
+            ret.Tiles = new string[MainColumn + 2][][];
+            ret.Crossroads = new SerializableCross[MainColumn * 2 + 2][];
         }
-        board.GenerateTiles();
-        board.GeneratePorts();
-        board.GenerateCrossroads();
-        return board;
+        ret.GenerateTiles();
+        ret.GeneratePorts();
+        ret.GenerateCrossroads();
+        return ret;
     }
 
     /// <summary>
@@ -87,29 +87,29 @@ public class SerializableBoard
     void GenerateTiles()
     {
         int len = SmallColumn;
-        for (int col = 0; col < tiles.Length; col++)
+        for (int col = 0; col < Tiles.Length; col++)
         {
             //Creates the board's size
-            tiles[col] = new string[len + 1][];
-            if (col < tiles.Length / 2)
+            Tiles[col] = new string[len + 1][];
+            if (col < Tiles.Length / 2)
                 len++;
             else
                 len--;
-            if (col != 0 && col != tiles.Length - 1)
+            if (col != 0 && col != Tiles.Length - 1)
             {
-                for (int row = 1; row < tiles[col].Length - 1; row++)
+                for (int Row = 1; Row < Tiles[col].Length - 1; Row++)
                 {
-                    string name = GetRandomKey(tilesToPlace);
-                    tilesToPlace[name]--; //signs that the tile was placed
+                    string name = GetRandomKey(TilesToPlace);
+                    TilesToPlace[name]--; //signs that the tile was placed
                     if (name == "Desert")
                     {
-                        tiles[col][row] = new string[] { name };
+                        Tiles[col][Row] = new string[] { name };
                     }
                     else
                     {
-                        string num = GetRandomKey(numbersToPlace);
-                        numbersToPlace[num]--; //signs that the number was used
-                        tiles[col][row] = new string[] { "Resource", name, num };
+                        string num = GetRandomKey(NumbersToPlace);
+                        NumbersToPlace[num]--; //signs that the number was used
+                        Tiles[col][Row] = new string[] { "Resource", name, num };
                     }
                 }
             }
@@ -122,51 +122,51 @@ public class SerializableBoard
     void GeneratePorts()
     {
         int col = SmallColumn;
-        int row = 0;
+        int Row = 0;
         bool isPort = true;
         int portNum = 0;
 
-        while (tiles[col][row] == null)
+        while (Tiles[col][Row] == null)
         {
             if (isPort)
             {
-                string portType = GetRandomKey(portsToPlace);
-                portsToPlace[portType]--; //signs that the number was used
-                tiles[col][row] = new string[] { "Port", portType, portAngels[portNum].ToString() };
+                string portType = GetRandomKey(PortsToPlace);
+                PortsToPlace[portType]--; //signs that the number was used
+                Tiles[col][Row] = new string[] { "Port", portType, portAngels[portNum].ToString() };
                 portNum++;
             }
             else
             {
-                tiles[col][row] = new string[] { "Water" };
+                Tiles[col][Row] = new string[] { "Water" };
             }
             isPort = !isPort;
 
-            if (row == 0 && col > 0)
+            if (Row == 0 && col > 0)
                 col--;
-            else if (col == 0 && row < tiles[col].Length - 1)
-                row++;
-            else if (row == tiles[col].Length - 1 && col < tiles.Length - 1)
+            else if (col == 0 && Row < Tiles[col].Length - 1)
+                Row++;
+            else if (Row == Tiles[col].Length - 1 && col < Tiles.Length - 1)
             {
                 col++;
-                row = tiles[col].Length - 1;
+                Row = Tiles[col].Length - 1;
             }
-            else if (col == tiles.Length - 1 && row > 0)
-                row--;
+            else if (col == Tiles.Length - 1 && Row > 0)
+                Row--;
         }
     }
 
     /// <summary>
-    /// Helper function that creates all crossroads
+    /// Helper function that creates all Crossroads
     /// </summary>
     void GenerateCrossroads()
     {
-        for (int col = 0; col < crossroads.Length; col++)
+        for (int col = 0; col < Crossroads.Length; col++)
         {
             int len = (MainColumn + 1) - Math.Abs(col - MainColumn) / 2;
             if (col % 2 == 0 && col < MainColumn)
                 len--;
-            crossroads[col] = new SerializableCross[len];
-            for (int row = 0; row < len; row++)
+            Crossroads[col] = new SerializableCross[len];
+            for (int Row = 0; Row < len; Row++)
             {
                 SerializableRoad leftDown = null;
                 SerializableRoad leftUp = null;
@@ -174,43 +174,43 @@ public class SerializableBoard
                 {
                     if (col % 2 == 0)
                     {
-                        leftDown = crossroads[col - 1][row].roads[SerializableCross.rightRoad][SerializableCross.straightRoad];
+                        leftDown = Crossroads[col - 1][Row].Roads[SerializableCross.rightRoad][SerializableCross.straightRoad];
                     }
                     else
                     {
                         bool offset = col > SerializableBoard.MainColumn;
                         if (offset)
-                            row++;
+                            Row++;
 
-                        if (row > 0 && row <= crossroads[col - 1].Length)
-                            leftDown = crossroads[col - 1][row - 1].roads[SerializableCross.rightRoad][SerializableCross.upRoad];
-                        if (row < crossroads[col - 1].Length)
-                            leftUp = crossroads[col - 1][row].roads[SerializableCross.rightRoad][SerializableCross.downRoad];
+                        if (Row > 0 && Row <= Crossroads[col - 1].Length)
+                            leftDown = Crossroads[col - 1][Row - 1].Roads[SerializableCross.rightRoad][SerializableCross.upRoad];
+                        if (Row < Crossroads[col - 1].Length)
+                            leftUp = Crossroads[col - 1][Row].Roads[SerializableCross.rightRoad][SerializableCross.downRoad];
 
                         if (offset)
-                            row--;
+                            Row--;
                     }
                 }
-                crossroads[col][row] = new SerializableCross(col, row, leftDown, leftUp);
+                Crossroads[col][Row] = new SerializableCross(col, Row, leftDown, leftUp);
             }
         }
     }
 
     /// <summary>
-    /// Gets the crossroads surrounding a tile
+    /// Gets the Crossroads surrounding a tile
     /// </summary>
-    /// <param name="column">The tile's column</param>
-    /// <param name="row">The tile's column</param>
-    /// <returns>All six crossroads surrounding the tile</returns>
-    public SerializableCross[] GetSurrounding(int column, int row)
+    /// <param name="Column">The tile's Column</param>
+    /// <param name="Row">The tile's Column</param>
+    /// <returns>All six Crossroads surrounding the tile</returns>
+    public SerializableCross[] GetSurrounding(int Column, int Row)
     {
         SerializableCross[] surrounding = new SerializableCross[6];
-        surrounding[0] = crossroads[2 * column - 1][row];
-        surrounding[1] = crossroads[2 * column][row];
-        surrounding[2] = surrounding[1].roads[1][0].GetOtherCross(surrounding[1]);
-        surrounding[3] = crossroads[2 * column][row - 1];
-        surrounding[4] = crossroads[2 * column - 1][row - 1];
-        surrounding[5] = surrounding[4].roads[0][1].GetOtherCross(surrounding[4]);
+        surrounding[0] = Crossroads[2 * Column - 1][Row];
+        surrounding[1] = Crossroads[2 * Column][Row];
+        surrounding[2] = surrounding[1].Roads[1][0].GetOtherCross(surrounding[1]);
+        surrounding[3] = Crossroads[2 * Column][Row - 1];
+        surrounding[4] = Crossroads[2 * Column - 1][Row - 1];
+        surrounding[5] = surrounding[4].Roads[0][1].GetOtherCross(surrounding[4]);
         return surrounding;
     }
 
@@ -221,7 +221,7 @@ public class SerializableBoard
     public override string ToString()
     {
         string ret = "";
-        foreach (string[][] tArr in tiles)
+        foreach (string[][] tArr in Tiles)
         {
             foreach (string[] tile in tArr)
             {
@@ -248,29 +248,29 @@ public class SerializableCross
     public const int upRoad = 1;
     public const int roadAmount = 2;
 
-    public SerializableRoad[][] roads { get; set; } = new SerializableRoad[roadAmount][]
+    public SerializableRoad[][] Roads { get; set; } = new SerializableRoad[roadAmount][]
     {
         new SerializableRoad[roadAmount],
         new SerializableRoad[roadAmount]
     };//[right/left][up/down/straight] --> [0][0] left down, [1][1] right up
-    public Color? color { get; set; }
-    public bool isCity { get; set; }
-    public int column { get; set; }
-    public int row { get; set; }
+    public Color? Color { get; set; }
+    public bool IsCity { get; set; }
+    public int Column { get; set; }
+    public int Row { get; set; }
 
     /// <summary>
-    /// Initializes a new Crossroad and set its relevant roads
+    /// Initializes a new Crossroad and set its relevant Roads
     /// Used only by the Xml serializer!
     /// </summary>
     public SerializableCross()
     {
         for (int i = 0; i < roadAmount; i++)
         {
-            SerializableRoad road = roads[rightRoad][i];
+            SerializableRoad road = Roads[rightRoad][i];
             if (road != null)
                 road.SetFirstCross(this);
 
-            road = roads[leftRoad][i];
+            road = Roads[leftRoad][i];
             if (road != null)
                 road.SetSecondCross(this);
         }
@@ -279,52 +279,52 @@ public class SerializableCross
     /// <summary>
     /// Initializes a new Crossroad
     /// </summary>
-    /// <param name="column">the crossroad's column</param>
-    /// <param name="row">the crossroad's row</param>
+    /// <param name="Column">the crossroad's Column</param>
+    /// <param name="Row">the crossroad's Row</param>
     /// <param name="leftDown">The road to the left and down of the crossroad</param>
     /// <param name="leftUp">The road to the left and up of the crossroad</param>
-    public SerializableCross(int column, int row, SerializableRoad leftDown = null, SerializableRoad leftUp = null)
+    public SerializableCross(int Column, int Row, SerializableRoad leftDown = null, SerializableRoad leftUp = null)
     {
-        this.column = column;
-        this.row = row;
-        color = null;
-        isCity = false;
+        this.Column = Column;
+        this.Row = Row;
+        Color = null;
+        IsCity = false;
 
         if (GetType() == typeof(SerializableCross)) //children will set themselves up
             SetRoads(leftDown, leftUp);
     }
 
     /// <summary>
-    /// Sets the left roads to their relevant place and Creates new roads to the right
+    /// Sets the left Roads to their relevant place and Creates new Roads to the right
     /// </summary>
     /// <param name="leftDown">The road to the left and down of the crossroad</param>
     /// <param name="leftUp">The road to the left and up of the crossroad</param>
     protected void SetRoads(SerializableRoad leftDown, SerializableRoad leftUp)
     {
-        if (column % 2 == 0)
+        if (Column % 2 == 0)
         {
-            roads[leftRoad][straightRoad] = leftDown;
+            Roads[leftRoad][straightRoad] = leftDown;
 
-            if (SerializableBoard.MainColumn > column || row > 0)
-                roads[rightRoad][downRoad] = new SerializableRoad(this); //right down
+            if (SerializableBoard.MainColumn > Column || Row > 0)
+                Roads[rightRoad][downRoad] = new SerializableRoad(this); //right down
             else
-                roads[rightRoad][downRoad] = null;
+                Roads[rightRoad][downRoad] = null;
 
-            if (SerializableBoard.MainColumn > column || (column - SerializableBoard.MainColumn) / 2 + row < SerializableBoard.MainColumn)
-                roads[rightRoad][upRoad] = new SerializableRoad(this); //right up
+            if (SerializableBoard.MainColumn > Column || (Column - SerializableBoard.MainColumn) / 2 + Row < SerializableBoard.MainColumn)
+                Roads[rightRoad][upRoad] = new SerializableRoad(this); //right up
             else
-                roads[rightRoad][upRoad] = null;
+                Roads[rightRoad][upRoad] = null;
         }
         else
         {
-            roads[leftRoad][downRoad] = leftDown;
+            Roads[leftRoad][downRoad] = leftDown;
 
-            roads[leftRoad][upRoad] = leftUp;
+            Roads[leftRoad][upRoad] = leftUp;
 
-            if (column < SerializableBoard.MainColumn * 2 + 1)
-                roads[rightRoad][straightRoad] = new SerializableRoad(this); //straight right
+            if (Column < SerializableBoard.MainColumn * 2 + 1)
+                Roads[rightRoad][straightRoad] = new SerializableRoad(this); //straight right
             else
-                roads[rightRoad][straightRoad] = null;
+                Roads[rightRoad][straightRoad] = null;
         }
 
         if (leftDown != null)
@@ -336,13 +336,13 @@ public class SerializableCross
     /// <summary>
     /// Places a village on the crossroad
     /// </summary>
-    /// <param name="color">color name of the village (Red, Blue, White, Yellow)</param>
-    public virtual void BuildVillage(Color color)
+    /// <param name="Color">Color name of the village (Red, Blue, White, Yellow)</param>
+    public virtual void BuildVillage(Color Color)
     {
-        if (this.color != null)
+        if (this.Color != null)
             throw new Exception(this.ToString() + " already built");
-        this.color = color;
-        isCity = false;
+        this.Color = Color;
+        IsCity = false;
     }
 
     /// <summary>
@@ -350,11 +350,11 @@ public class SerializableCross
     /// </summary>
     public virtual void UpgradeToCity()
     {
-        if (this.color == null)
+        if (this.Color == null)
             throw new Exception(this.ToString() + " isn't village");
-        if (isCity)
+        if (IsCity)
             throw new Exception(this.ToString() + " already city");
-        isCity = true;
+        IsCity = true;
     }
 
     /// <summary>
@@ -363,13 +363,13 @@ public class SerializableCross
     /// <returns>true if far enough to build and false otherwise.</returns>
     public bool TooCloseToBuild()
     {
-        foreach (SerializableRoad[] roadArr in roads)
+        foreach (SerializableRoad[] roadArr in Roads)
         {
             foreach (SerializableRoad road in roadArr)
             {
                 if (road != null)
                 {
-                    if (road.GetOtherCross(this).color != null)
+                    if (road.GetOtherCross(this).Color != null)
                     {
                         return true;
                     }
@@ -380,19 +380,19 @@ public class SerializableCross
     }
 
     /// <summary>
-    /// Check whether or not the Crossroad is connected by roads of the chosen color.
+    /// Check whether or not the Crossroad is connected by Roads of the chosen Color.
     /// </summary>
-    /// <param name="color">The color to check</param>
+    /// <param name="Color">The Color to check</param>
     /// <returns>true if it is connected and false otherwise</returns>
-    public bool ConnectedByRoad(Color color)
+    public bool ConnectedByRoad(Color Color)
     {
-        foreach (SerializableRoad[] roadArr in roads)
+        foreach (SerializableRoad[] roadArr in Roads)
         {
             foreach (SerializableRoad road in roadArr)
             {
                 if (road != null)
                 {
-                    if (road.color == color)
+                    if (road.Color == Color)
                     {
                         return true;
                     }
@@ -408,13 +408,13 @@ public class SerializableCross
     /// <returns></returns>
     public override string ToString()
     {
-        string ret = "(Column:" + column + " Row:" + row + ")";
-        if (color != null)
+        string ret = "(Column:" + Column + " Row:" + Row + ")";
+        if (Color != null)
         {
             string building = "Village";
-            if (isCity)
+            if (IsCity)
                 building = "City";
-            ret = "(" + ret + "(" + color + " " + building + "))";
+            ret = "(" + ret + "(" + Color + " " + building + "))";
         }
         return ret;
     }
@@ -424,7 +424,7 @@ public class SerializableRoad
 {
 
     protected SerializableCross _leftCross { get; set; }
-    public SerializableCross leftCross
+    public SerializableCross LeftCross
     {
         get
         {
@@ -432,7 +432,7 @@ public class SerializableRoad
         }
     }
     protected SerializableCross _rightCross { get; set; }
-    public SerializableCross rightCross
+    public SerializableCross RightCross
     {
         get
         {
@@ -440,7 +440,7 @@ public class SerializableRoad
         }
     }
 
-    public Color? color { get; set; }
+    public Color? Color { get; set; }
 
     /// <summary>
     /// Creates an empty road, which will get its values later.
@@ -455,7 +455,7 @@ public class SerializableRoad
     public SerializableRoad(SerializableCross cross)
     {
         _leftCross = cross;
-        color = null;
+        Color = null;
     }
 
     /// <summary>
@@ -465,9 +465,9 @@ public class SerializableRoad
     /// <returns>The other crossroad</returns>
     public SerializableCross GetOtherCross(SerializableCross cross)
     {
-        if (cross == leftCross)
-            return rightCross;
-        return leftCross;
+        if (cross == LeftCross)
+            return RightCross;
+        return LeftCross;
     }
 
     /// <summary>
@@ -476,7 +476,7 @@ public class SerializableRoad
     /// <param name="value">The first crossroad</param>
     public void SetFirstCross(SerializableCross value)
     {
-        if (leftCross != null)
+        if (LeftCross != null)
             throw new Exception(this.ToString() + " already has a first crossroad");
         _leftCross = value;
     }
@@ -495,12 +495,12 @@ public class SerializableRoad
     /// <summary>
     /// Places a road object in this road's place
     /// </summary>
-    /// <param name="color">color name of the road (Red, Blue, White, Yellow)</param>
-    public virtual void Build(Color color)
+    /// <param name="Color">Color name of the road (Red, Blue, White, Yellow)</param>
+    public virtual void Build(Color Color)
     {
-        if (this.color != null)
+        if (this.Color != null)
             throw new Exception(this.ToString() + " already built");
-        this.color = color;
+        this.Color = Color;
     }
 
     /// <summary>
@@ -509,7 +509,7 @@ public class SerializableRoad
     /// <returns></returns>
     public override string ToString()
     {
-        return leftCross + " to " + rightCross;
+        return LeftCross + " to " + RightCross;
     }
 }
 

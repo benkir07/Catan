@@ -18,51 +18,48 @@ public static class Prefabs
     /// </summary>
     public static void LoadPrefabs()
     {
-        //The materials' prebfabs
         TextInfo myTI = new CultureInfo("en-US", false).TextInfo;
-        Object[] temp = Resources.LoadAll("Materials/Colors", typeof(Material));
-        foreach (Object material in temp)
+
+        //Color Prebfabs
+        foreach (Object material in Resources.LoadAll("Materials/Colors", typeof(Material)))
         {
             Colors[(Color)System.Enum.Parse(typeof(Color), myTI.ToTitleCase(material.name.ToLower()))] = (Material)material;
         }
-        temp = Resources.LoadAll("Materials/Transparent", typeof(Material));
-        foreach (Object material in temp)
+        //Transparents
+        foreach (Object material in Resources.LoadAll("Materials/Transparent", typeof(Material)))
         {
             Tranparents[(Color)System.Enum.Parse(typeof(Color), myTI.ToTitleCase(material.name.ToLower()))] = (Material)material;
         }
 
-        //The Tiles' prebfabs
-        temp = Resources.LoadAll("Tiles", typeof(GameObject));
-        foreach (Object tile in temp)
+        //Tiles prebfabs
+        foreach (Object tile in Resources.LoadAll("Tiles", typeof(GameObject)))
         {
             Tiles[tile.name] = (GameObject)tile;
         }
 
-        //The ports' prebfabs
-        temp = Resources.LoadAll("Ports", typeof(GameObject));
-        foreach (Object port in temp)
+        //Ports prebfabs
+        foreach (Object port in Resources.LoadAll("Ports", typeof(GameObject)))
         {
             Port.portsPrefabs[port.name] = (GameObject)port;
         }
 
-        //The Buildings' prefabs
-        temp = Resources.LoadAll("Buildings", typeof(GameObject));
-        foreach (Object building in temp)
+        //Buildings prefabs
+        foreach (Object building in Resources.LoadAll("Buildings", typeof(GameObject)))
         {
             Buildings[building.name] = (GameObject)building;
         }
 
-        //The different Roads' rotations prefabs
-        temp = Resources.LoadAll("Buildings/Roads", typeof(GameObject));
-        foreach (Object road in temp)
+        //The different Roads rotations prefabs
+        foreach (Object road in Resources.LoadAll("Buildings/Roads", typeof(GameObject)))
         {
             Roads[road.name] = (GameObject)road;
         }
 
-        ResourceCard.cardPrefab = (GameObject)Resources.Load("Cards/Card");
+        //Single Card Prefab
+        ResourceCard.CardPrefab = (GameObject)Resources.Load("Cards/Card");
 
-        temp = Resources.LoadAll("Cards/Resources", typeof(Sprite));
-        foreach (Object card in temp)
+        //Resource Cards prefabs
+        foreach (Object card in Resources.LoadAll("Cards/Resources", typeof(Sprite)))
         {
             ResourceCards[(Resource)System.Enum.Parse(typeof(Resource), card.name)] = (Sprite)card;
         }

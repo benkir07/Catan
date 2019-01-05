@@ -11,14 +11,15 @@ namespace Catan_Server
     static class Server
     {
         private static Thread server;
-        public static ServerGUI gui { get; private set; }
+        public static ServerGUI Gui { get; private set; }
 
         public const int Port = 12345;
         public static bool online;
         private static TcpListener serverSocket = new TcpListener(IPAddress.Any, Port);
 
-        public static List<TcpClient> users { get; } = new List<TcpClient>();
-        public static List<Game> games { get; } = new List<Game>();
+        public static List<TcpClient> Users { get; } = new List<TcpClient>();
+        public static List<Game> Games { get; } = new List<Game>();
+
         /// <summary>
         /// The main entry point for the server application.
         /// </summary>
@@ -26,17 +27,17 @@ namespace Catan_Server
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            gui = new ServerGUI();
+            Gui = new ServerGUI();
 
             server = new Thread(HandleClients);
             server.Start();
 
-            Application.Run(gui);
+            Application.Run(Gui);
         }
 
         /// <summary>
         /// Handles the networking with new and existing clients.
-        /// Accepts new clients them and creates games.
+        /// Accepts new clients them and creates Games.
         /// </summary>
         static void HandleClients()
         {
@@ -48,19 +49,19 @@ namespace Catan_Server
                 if (serverSocket.Pending())
                 {
                     TcpClient client = serverSocket.AcceptTcpClient();
-                    gui.EnterLog(client.Client.RemoteEndPoint + " Connected");
+                    Gui.EnterLog(client.Client.RemoteEndPoint + " Connected");
 
-                    users.Add(client);
+                    Users.Add(client);
                 }
 
-                if (users.Count == gui.PlayersPerGame)
+                if (Users.Count == Gui.PlayersPerGame)
                 {
-                    games.Add(new Game(users.ToArray()));
-                    users.Clear();
+                    Games.Add(new Game(Users.ToArray()));
+                    Users.Clear();
                 }
 
                 List<TcpClient> disconnected = new List<TcpClient>();
-                foreach (TcpClient user in users)
+                foreach (TcpClient user in Users)
                 {
                     if (user.Client.Poll(0, SelectMode.SelectRead))
                     {
@@ -73,8 +74,8 @@ namespace Catan_Server
                 }
                 foreach (TcpClient disconnect in disconnected)
                 {
-                    users.Remove(disconnect);
-                    gui.EnterLog(disconnect.Client.RemoteEndPoint + " Disconnected");
+                    Users.Remove(disconnect);
+                    Gui.EnterLog(disconnect.Client.RemoteEndPoint + " Disconnected");
                     disconnect.Close();
                 }
             }
@@ -86,7 +87,7 @@ namespace Catan_Server
         public static void Close()
         {
             online = false;
-            while (games.Count > 0 && server.ThreadState == ThreadState.Running) { }
+            while (Games.Count > 0 && server.ThreadState == ThreadState.Running) { }
             serverSocket.Stop();
         }
     }

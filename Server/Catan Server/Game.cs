@@ -9,7 +9,7 @@ namespace Catan_Server
     class Game
     {
         private Thread game;
-        public ThreadState threadState
+        public ThreadState ThreadState
         {
             get
             {
@@ -17,10 +17,10 @@ namespace Catan_Server
             }
         }
         private Player[] players;
-        private static SerializableBoard board;
+        private SerializableBoard Board;
 
         /// <summary>
-        /// Initializes a game with the users' sockets
+        /// Initializes a game with the Users' sockets
         /// </summary>
         /// <param name="playerSockets">Array of the players' sockets joining the game</param>
         public Game(TcpClient[] playerSockets)
@@ -31,27 +31,31 @@ namespace Catan_Server
             }
             this.game = new Thread(this.Run);
 
-            #region constant board
-            if (board == null)
-                board = SerializableBoard.RandomBoard();
+            this.Board = SerializableBoard.RandomBoard();
+
+            #region constant Board
+            /*
+            if (Board == null)
+                Board = SerializableBoard.RandomBoard();
             else
             {
-                foreach (SerializableCross[] crossArr in board.crossroads)
+                foreach (SerializableCross[] crossArr in Board.Crossroads)
                 {
                     foreach (SerializableCross cross in crossArr)
                     {
-                        cross.color = null;
-                        foreach (SerializableRoad[] roadArr in cross.roads)
+                        cross.Color = null;
+                        foreach (SerializableRoad[] roadArr in cross.Roads)
                         {
                             foreach (SerializableRoad road in roadArr)
                             {
                                 if (road != null)
-                                    road.color = null;
+                                    road.Color = null;
                             }
                         }
                     }
                 }
             }
+            */
             #endregion
 
             players = new Player[playerSockets.Length];
@@ -68,60 +72,62 @@ namespace Catan_Server
         /// </summary>
         private void Run()
         {
+            //send initial Board
             foreach (Player player in players)
             {
-                player.Send(board);
+                player.Send(Board);
             }
-
+            //place first village
             foreach (Player placer in players)
             {
                 try
                 {
                     placer.WriteLine(Message.StartPlace.ToString());
-                    placer.Send(PlacesCanBuildVillage(placer.color, needRoadLink: false));
+                    placer.Send(PlacesCanBuildVillage(placer.Color, needRoadLink: false));
 
                     string col, row;
                     (col, row) = Divide(placer.ReadLine(), ' ');
-                    board.crossroads[int.Parse(col)][int.Parse(row)].BuildVillage(placer.color);
-                    Broadcast(Message.BuildVillage, placer.color.ToString(), col, row);
+                    Board.Crossroads[int.Parse(col)][int.Parse(row)].BuildVillage(placer.Color);
+                    Broadcast(Message.BuildVillage, placer.Color.ToString(), col, row);
 
                     string crossroad, road, rightLeft, upDown;
                     (crossroad, road) = Divide(placer.ReadLine(), ',');
                     (rightLeft, upDown) = Divide(road, ' ');
-                    board.crossroads[int.Parse(col)][int.Parse(row)].roads[int.Parse(rightLeft)][int.Parse(upDown)].Build(placer.color);
-                    Broadcast(Message.BuildRoad, placer.color.ToString(), col, row, rightLeft, upDown);
+                    Board.Crossroads[int.Parse(col)][int.Parse(row)].Roads[int.Parse(rightLeft)][int.Parse(upDown)].Build(placer.Color);
+                    Broadcast(Message.BuildRoad, placer.Color.ToString(), col, row, rightLeft, upDown);
                 }
                 catch (Exception ex)
                 {
-                    Server.gui.EnterLog(ex.ToString());
+                    Server.Gui.EnterLog(ex.ToString());
                     Stop();
                 }
             }
+            //place second village and give the resources
             foreach (Player placer in players.Reverse())
             {
                 try
                 {
                     placer.WriteLine(Message.StartPlace.ToString());
-                    placer.Send(PlacesCanBuildVillage(placer.color, needRoadLink: false));
+                    placer.Send(PlacesCanBuildVillage(placer.Color, needRoadLink: false));
 
                     string col, row;
                     (col, row) = Divide(placer.ReadLine(), ' ');
-                    board.crossroads[int.Parse(col)][int.Parse(row)].BuildVillage(placer.color);
-                    Broadcast(Message.BuildVillage, placer.color.ToString(), col, row);
+                    Board.Crossroads[int.Parse(col)][int.Parse(row)].BuildVillage(placer.Color);
+                    Broadcast(Message.BuildVillage, placer.Color.ToString(), col, row);
 
                     foreach (int[] tileCoords in SurroundingTiles(int.Parse(col), int.Parse(row)))
                     {
-                        string[] tile = board.tiles[tileCoords[0]][tileCoords[1]];
+                        string[] tile = Board.Tiles[tileCoords[0]][tileCoords[1]];
 
                         if (tile[0] == "Resource")
-                            Broadcast(Message.AddResource, placer.color.ToString(), tile[1]);
+                            Broadcast(Message.AddResource, placer.Color.ToString(), tileCoords[0].ToString(), tileCoords[1].ToString() ,tile[1]);
                     }
 
                     string crossroad, road, rightLeft, upDown;
                     (crossroad, road) = Divide(placer.ReadLine(), ',');
                     (rightLeft, upDown) = Divide(road, ' ');
-                    board.crossroads[int.Parse(col)][int.Parse(row)].roads[int.Parse(rightLeft)][int.Parse(upDown)].Build(placer.color);
-                    Broadcast(Message.BuildRoad, placer.color.ToString(), col, row, rightLeft, upDown);
+                    Board.Crossroads[int.Parse(col)][int.Parse(row)].Roads[int.Parse(rightLeft)][int.Parse(upDown)].Build(placer.Color);
+                    Broadcast(Message.BuildRoad, placer.Color.ToString(), col, row, rightLeft, upDown);
                 }
                 catch
                 {
@@ -148,7 +154,7 @@ namespace Catan_Server
                     List<Player> tempPlayers = players.ToList();
                     foreach (Player p in disconnected)
                     {
-                        Server.gui.EnterLog(p.IPPort + " Disconnected");
+                        Server.Gui.EnterLog(p.IPPort + " Disconnected");
                         tempPlayers.Remove(p);
                     }
                     players = tempPlayers.ToArray();
@@ -166,15 +172,15 @@ namespace Catan_Server
         }
 
         /// <summary>
-        /// Stops the game, removes it from the active games and returns the players' sockets to the server thread.
+        /// Stops the game, removes it from the active Games and returns the players' sockets to the server thread.
         /// </summary>
         public void Stop()
         {
-            Server.games.Remove(this);
+            Server.Games.Remove(this);
             foreach (Player player in players)
             {
                 player.Close();
-                //Server.users.Add(player.socket);
+                //Server.Users.Add(player.socket);
             }
             game.Abort();
         }
@@ -206,14 +212,14 @@ namespace Catan_Server
         {
             List<int[]> ableToBuild = new List<int[]>();
 
-            for (int col = 0; col < board.crossroads.Length; col++)
+            for (int col = 0; col < Board.Crossroads.Length; col++)
             {
-                for (int row = 0; row < board.crossroads[col].Length; row++)
+                for (int row = 0; row < Board.Crossroads[col].Length; row++)
                 {
-                    SerializableCross cross = board.crossroads[col][row];
-                    if (cross.color == null && !cross.TooCloseToBuild())
+                    SerializableCross cross = Board.Crossroads[col][row];
+                    if (cross.Color == null && !cross.TooCloseToBuild())
                     {
-                        if (!needRoadLink || board.crossroads[col][row].ConnectedByRoad(color))
+                        if (!needRoadLink || Board.Crossroads[col][row].ConnectedByRoad(color))
                             ableToBuild.Add(new int[] { col, row });
                     }
                 }
@@ -222,12 +228,25 @@ namespace Catan_Server
             return ableToBuild;
         }
 
-        private (string, string) Divide(string place, char middle)
+        /// <summary>
+        /// Divides a string to two strings, one from the start to a specific character, and another from the character to the end
+        /// Similar to string.split() in python
+        /// </summary>
+        /// <param name="str">the string to divide</param>
+        /// <param name="middle">the character that splits the string</param>
+        /// <returns></returns>
+        private (string, string) Divide(string str, char middle)
         {
-            int dividerIndex = place.IndexOf(middle);
-            return (place.Substring(0, dividerIndex), place.Substring(dividerIndex + 1));
+            int dividerIndex = str.IndexOf(middle);
+            return (str.Substring(0, dividerIndex), str.Substring(dividerIndex + 1));
         }
 
+        /// <summary>
+        /// Calculates the tiles surrounding a crossroad by the crossroad's column and row.
+        /// </summary>
+        /// <param name="col">The crossroad's column</param>
+        /// <param name="row">The crossroad's row</param>
+        /// <returns>array of pairs of ints representing the tiles' column and row</returns>
         private int[][] SurroundingTiles(int col, int row)
         {
             int[][] places = new int[3][];

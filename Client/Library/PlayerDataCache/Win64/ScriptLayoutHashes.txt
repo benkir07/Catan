@@ -1,6 +1,6 @@
 WindowsStandalone
 PlayerPath?
-F:/Programming/Catan Builds/0.1/Settlers-of-Catan.exe
+F:/Programming/Catan/Client Build/Settlers-of-Catan.exe
 SceneListBegin?
 Assets/Game.unity
 SceneListEnd?
@@ -159,8 +159,8 @@ e1ea12ca952c81d81a9a21fdf34446ed UnityEngine.HoloLens.dll:UnityEngine.EventSyste
 98d69a140ec0084cde3b6a5e09aea295 UnityEngine.HoloLens.dll:UnityEngine.XR.WSA.SpatialMappingCollider
 dfd33ff9ae3ce8d7ca1f22b475ec2387 UnityEngine.HoloLens.dll:UnityEngine.XR.WSA.SpatialMappingRenderer
 aac9c55ae7ba4b95b852a7d9c191acd1 Unity.TextMeshPro.dll:TMPro.TextMeshProUGUI
-075dbd5f45f3cab6500ff6936f6f68ca Assembly-CSharp.dll:.NetworkManager
-1cc7442c5690392d58cec9e8cd398b21 Assembly-CSharp.dll:.HandManager
+3f2d9a175951e0ae28e3080b3154d855 Assembly-CSharp.dll:.NetworkManager
+486cd95c82d8305219c352c06b776e1f Assembly-CSharp.dll:.HandManager
 0a006f3734181ba8b26758f0866152c0 UnityEngine.SpatialTracking.dll:UnityEngine.SpatialTracking.TrackedPoseDriver
 e04611b8715e6833d2bd7010fc6be10b Unity.TextMeshPro.dll:TMPro.TMP_StyleSheet
 2f9af06a78208a67db480e9bfed4a076 Unity.TextMeshPro.dll:TMPro.TextMeshPro

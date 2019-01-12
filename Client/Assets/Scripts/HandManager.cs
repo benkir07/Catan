@@ -15,8 +15,7 @@ class HandManager : MonoBehaviour
     /// </summary>
     public void Start()
     {
-        Prefabs.LoadPrefabs();
-        moveTowards = ResourceCard.CardPrefab.transform.position;
+        moveTowards = Prefabs.CardPrefab.transform.position;
 
         Hand.Sort();
         visualHand = ResourceCard.GenerateHand(Hand, this.transform);
@@ -31,7 +30,7 @@ class HandManager : MonoBehaviour
         foreach (GameObject card in Animated)
         {
             Vector3 cardPosition = card.transform.position;
-            card.transform.position = Vector3.MoveTowards(cardPosition, moveTowards, Mathf.Max(Vector3.Distance(cardPosition, moveTowards) / 10f, CardSpeed));
+            card.transform.position = Vector3.MoveTowards(cardPosition, moveTowards, Mathf.Max(Vector3.Distance(cardPosition, moveTowards) * Time.deltaTime * 5f, CardSpeed));
 
             if (card.transform.position.Equals(moveTowards))
             {
@@ -65,7 +64,7 @@ class HandManager : MonoBehaviour
     /// <param name="producing">The tile producing the resource (to float the card from)</param>
     public void AddCard(Resource card, Tile producing)
     {
-        GameObject newCard = Instantiate(ResourceCard.CardPrefab, this.transform);
+        GameObject newCard = Instantiate(Prefabs.CardPrefab, this.transform);
         newCard.GetComponent<SpriteRenderer>().sprite = Prefabs.ResourceCards[card];
         newCard.transform.position = producing.GameObject.transform.position;
         Animated.Add(newCard);

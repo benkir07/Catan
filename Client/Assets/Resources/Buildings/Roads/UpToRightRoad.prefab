@@ -21,7 +21,7 @@ GameObject:
   - component: {fileID: 4377898995749594}
   - component: {fileID: 33272387026556790}
   - component: {fileID: 23609827999874754}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: node_id3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -36,7 +36,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4422101907256752}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: UpToRightRoad
   m_TagString: Untagged
   m_Icon: {fileID: 0}

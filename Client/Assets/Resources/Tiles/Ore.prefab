@@ -23,7 +23,7 @@ GameObject:
   - component: {fileID: 23635177556504770}
   - component: {fileID: 222579264319769478}
   - component: {fileID: 114003116267214404}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: NumberText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -41,7 +41,7 @@ GameObject:
   - component: {fileID: 33024119435325126}
   - component: {fileID: 23703378315473326}
   - component: {fileID: 222674395734843382}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: NumberToken
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -56,7 +56,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4946290121368030}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Ore
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -73,7 +73,7 @@ GameObject:
   - component: {fileID: 4456771235835384}
   - component: {fileID: 33363360478871252}
   - component: {fileID: 23558689288461088}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: node_id5
   m_TagString: Untagged
   m_Icon: {fileID: 0}

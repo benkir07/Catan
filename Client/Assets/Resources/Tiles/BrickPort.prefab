@@ -21,7 +21,7 @@ GameObject:
   - component: {fileID: 4002286162178572}
   - component: {fileID: 33758931409830162}
   - component: {fileID: 23048717135738434}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: node_id3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -36,7 +36,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4300530218760520}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Water
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -51,7 +51,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4659777036004314}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: BrickPort
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -66,7 +66,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4316089131526186}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: BrickPort
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -83,7 +83,7 @@ GameObject:
   - component: {fileID: 4661187663379168}
   - component: {fileID: 33567999216104294}
   - component: {fileID: 23207671614177638}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: node_id3
   m_TagString: Untagged
   m_Icon: {fileID: 0}

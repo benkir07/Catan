@@ -19,7 +19,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4750326362866458}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: City
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -36,7 +36,7 @@ GameObject:
   - component: {fileID: 4367295042147282}
   - component: {fileID: 33427233188561970}
   - component: {fileID: 23198980631816158}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: node_id3
   m_TagString: Untagged
   m_Icon: {fileID: 0}

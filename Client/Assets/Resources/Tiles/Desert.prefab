@@ -19,7 +19,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4779213342944460}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Desert
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -36,7 +36,7 @@ GameObject:
   - component: {fileID: 4512269130076956}
   - component: {fileID: 33152255561466794}
   - component: {fileID: 23424867655822984}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: node_id5
   m_TagString: Untagged
   m_Icon: {fileID: 0}

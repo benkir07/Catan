@@ -18,6 +18,7 @@ namespace Catan_Server
         }
         private Player[] players;
         private SerializableBoard Board;
+        private static Random Dice { get; } = new Random();
 
         /// <summary>
         /// Initializes a game with the Users' sockets
@@ -96,9 +97,8 @@ namespace Catan_Server
                     Board.Crossroads[int.Parse(col)][int.Parse(row)].Roads[int.Parse(rightLeft)][int.Parse(upDown)].Build(placer.Color);
                     Broadcast(Message.BuildRoad, placer.Color.ToString(), col, row, rightLeft, upDown);
                 }
-                catch (Exception ex)
+                catch
                 {
-                    Server.Gui.EnterLog(ex.ToString());
                     Stop();
                 }
             }
@@ -134,39 +134,34 @@ namespace Catan_Server
                     Stop();
                 }
             }
-            #region
-            /*
-            while (Server.online)
+
+            //Turns
+            foreach (Player player in players)
             {
-                List<Player> disconnected = new List<Player>();
-                foreach (Player player in players)
+                int dice1 = Dice.Next(1, 7);
+                int dice2 = Dice.Next(1, 7);
+                int result = dice1 + dice2;
+                Broadcast(Message.RollDice, dice1.ToString(), dice2.ToString(), result.ToString());
+
+                if (result == 7)
                 {
-                    if (player.CharsToRead != 0)
+                    //robber
+                }
+                else
+                {
+                    List<(int, int)> producingTiles = this.Board.GetTilesOfNum(result);
+                    foreach ((int col, int row) in producingTiles)
                     {
-                        string request = player.ReadLine();
-                        switch (request)
+                        foreach (SerializableCross cross in Board.GetSurrounding(col, row))
                         {
+                            if (cross.Color != null) //There is a building
+                            {
+                                Broadcast(Message.AddResource, cross.Color.ToString(), col.ToString(), row.ToString(), Board.Tiles[col][row][SerializableBoard.ResourceType]);
+                            }
                         }
                     }
                 }
-                if (disconnected.Count > 0)
-                {
-                    List<Player> tempPlayers = players.ToList();
-                    foreach (Player p in disconnected)
-                    {
-                        Server.Gui.EnterLog(p.IPPort + " Disconnected");
-                        tempPlayers.Remove(p);
-                    }
-                    players = tempPlayers.ToArray();
-
-                    if (players.Length == 0)
-                    {
-                        Stop();
-                    }
-                }
             }
-            */
-            #endregion
 
             Stop();
         }

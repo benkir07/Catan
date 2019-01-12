@@ -8,7 +8,7 @@ public partial class Player : MonoBehaviour
     private NetworkManager network;
     private HandManager cardsInHand;
 
-    public Color color;
+    private Color color;
     private Board board;
     enum State
     {
@@ -28,7 +28,6 @@ public partial class Player : MonoBehaviour
 
         cardsInHand.enabled = true;
 
-        Prefabs.LoadPrefabs();
         canvas = GameObject.Find("Canvas");
 
         color = (Color)Enum.Parse(typeof(Color), network.ReadLine());
@@ -42,6 +41,18 @@ public partial class Player : MonoBehaviour
     /// </summary>
     private void Update()
     {
+        if (network.Available > 0 && !GetComponent<DiceThrower>().Rolling)
+        {
+            string data = network.ReadLine();
+            if (Enum.TryParse(data, out Message message))
+            {
+                HandleMessage(message);
+            }
+            else
+            {
+                throw new Exception("Server sent illegel Message: " + data);
+            }
+        }
         if (state != null)
         {
             switch (state)
@@ -61,19 +72,7 @@ public partial class Player : MonoBehaviour
                     break;
             }
         }
-        if (network.Available > 0)
-        {
-            string data = network.ReadLine();
-            Message message;
-            if (Enum.TryParse(data, out message))
-            {
-                HandleMessage(message);
-            }
-            else
-            {
-                throw new Exception("Server sent illegel Message: " + data);
-            }
-        }
+
     }
 
     /// <summary>
@@ -84,6 +83,11 @@ public partial class Player : MonoBehaviour
     {
         switch (message)
         {
+            case Message.Disconnect:
+                {
+                    print("Disconnected!");
+                    break;
+                }
             case Message.StartPlace:
                 {
                     List<int[]> places = network.Deserialize<List<int[]>>();
@@ -132,6 +136,12 @@ public partial class Player : MonoBehaviour
                     {
                         cardsInHand.AddCard(resource, board.Tiles[col][row]); //Temporary!!
                     }
+                    break;
+                }
+            case Message.RollDice:
+                {
+                    GetComponent<DiceThrower>().ThrowDice(int.Parse(network.ReadLine()), int.Parse(network.ReadLine()));
+                    Debug.Log("Rolled a " + int.Parse(network.ReadLine()));
                     break;
                 }
         }
@@ -188,8 +198,7 @@ public partial class Player : MonoBehaviour
         if (Input.GetMouseButtonDown(0))
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            RaycastHit hit;
-            if (Physics.Raycast(ray, out hit))
+            if (Physics.Raycast(ray, out RaycastHit hit))
             {
                 if (hit.transform.parent.tag == "Visual")
                 {

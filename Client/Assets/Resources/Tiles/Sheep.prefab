@@ -19,7 +19,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4230787028374378}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Sheep
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -38,7 +38,7 @@ GameObject:
   - component: {fileID: 23001768313560212}
   - component: {fileID: 222849733965420858}
   - component: {fileID: 114013989910652946}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: NumberText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -55,7 +55,7 @@ GameObject:
   - component: {fileID: 4546510726626574}
   - component: {fileID: 33971672449595608}
   - component: {fileID: 23024508191468688}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: node_id3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -73,7 +73,7 @@ GameObject:
   - component: {fileID: 33242765402109734}
   - component: {fileID: 23475576938237068}
   - component: {fileID: 222582892307151366}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: NumberToken
   m_TagString: Untagged
   m_Icon: {fileID: 0}

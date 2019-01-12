@@ -45,8 +45,8 @@ namespace Catan_Server
                 WriteTo.AutoFlush = true;
             }
 
-            WriteTo.WriteLine("Game Start");
-            WriteTo.WriteLine(color);
+            WriteLine("Game Start");
+            WriteLine(color.ToString());
         }
 
         /// <summary>
@@ -66,6 +66,7 @@ namespace Catan_Server
         public void WriteLine(string message)
         {
             WriteTo.WriteLine(message);
+            ReadFrom.ReadLine(); //Sign that got the message
         }
 
         /// <summary>
@@ -77,8 +78,10 @@ namespace Catan_Server
             StringWriter xml = new StringWriter();
             XmlSerializer serializer = new XmlSerializer(toSend.GetType());
             serializer.Serialize(xml, toSend);
-            WriteTo.WriteLine(xml.ToString().Length);
+            WriteLine(xml.ToString().Length.ToString());
+
             WriteTo.WriteLine(xml.ToString());
+            ReadFrom.ReadLine(); //Sign that got the message
         }
 
         /// <summary>
@@ -86,8 +89,15 @@ namespace Catan_Server
         /// </summary>
         public void Close()
         {
-            Server.Gui.EnterLog(IPPort + " Disconnected");
-            Socket.Close();
+            try
+            {
+                WriteLine(Message.Disconnect.ToString());
+            }
+            finally
+            {
+                Server.Gui.EnterLog(IPPort + " Disconnected");
+                Socket.Close();
+            }
         }
     }
 }

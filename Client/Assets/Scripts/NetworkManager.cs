@@ -28,7 +28,7 @@ public class NetworkManager : MonoBehaviour {
     /// </summary>
     private void Start()
     {
-        player = gameObject.GetComponent<Player>();
+        player = GetComponent<Player>();
 
         try
         {
@@ -100,6 +100,7 @@ public class NetworkManager : MonoBehaviour {
     public string ReadLine()
     {
         string data = socketReader.ReadLine();
+        socketWriter.WriteLine("V");
         //print(data);
         return data;
     }
@@ -116,7 +117,8 @@ public class NetworkManager : MonoBehaviour {
         int len = int.Parse(ReadLine());
         char[] xmlPlaces = new char[len];
         socketReader.Read(xmlPlaces, 0, len);
-        ReadLine(); //There is always a spare newline after my way of serialization
+        socketReader.ReadLine(); //There is always a spare newline after my way of serialization
+        socketWriter.WriteLine("V");
 
         StringReader xml = new StringReader(new string(xmlPlaces));
         return (T)serializer.Deserialize(xml);

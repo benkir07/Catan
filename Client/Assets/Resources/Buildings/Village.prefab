@@ -21,7 +21,7 @@ GameObject:
   - component: {fileID: 4114362037920760}
   - component: {fileID: 33420776952284236}
   - component: {fileID: 23692512741976760}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: node_id3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -36,7 +36,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4945050748756362}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Village
   m_TagString: Untagged
   m_Icon: {fileID: 0}

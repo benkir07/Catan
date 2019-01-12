@@ -21,7 +21,7 @@ GameObject:
   - component: {fileID: 4264846621337064}
   - component: {fileID: 33856053501092460}
   - component: {fileID: 23238816953362598}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: node_id5
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -40,7 +40,7 @@ GameObject:
   - component: {fileID: 23893970178936116}
   - component: {fileID: 222953706538055824}
   - component: {fileID: 114848848205775562}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: NumberText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -58,7 +58,7 @@ GameObject:
   - component: {fileID: 33233142213983452}
   - component: {fileID: 23491410069020218}
   - component: {fileID: 222548583125889030}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: NumberToken
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -73,7 +73,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4975098937103086}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Wheat
   m_TagString: Untagged
   m_Icon: {fileID: 0}

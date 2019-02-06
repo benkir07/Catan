@@ -10,6 +10,7 @@ TagManager:
   - V or X
   - Manager
   - Card
+  - Arrow
   layers:
   - Default
   - TransparentFX

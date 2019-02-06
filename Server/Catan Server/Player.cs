@@ -25,7 +25,8 @@ namespace Catan_Server
                 return Socket.Client.RemoteEndPoint;
             }
         } 
-        public Color Color { get; }
+        public PlayerColor PlayerColor { get; }
+        public List<Resource> resources = new List<Resource>();
         private StreamReader ReadFrom { get; }
         private StreamWriter WriteTo { get; }
 
@@ -34,10 +35,10 @@ namespace Catan_Server
         /// </summary>
         /// <param name="socket">The player's socket</param>
         /// <param name="color">The player's color</param>
-        public Player(TcpClient socket, Color color)
+        public Player(TcpClient socket, PlayerColor color)
         {
             this.Socket = socket;
-            this.Color = color;
+            this.PlayerColor = color;
 
             ReadFrom = new StreamReader(socket.GetStream());
             WriteTo = new StreamWriter(socket.GetStream());
@@ -93,11 +94,27 @@ namespace Catan_Server
             {
                 WriteLine(Message.Disconnect.ToString());
             }
+            catch
+            {
+                //Will raise an error after player disconnection
+            }
             finally
             {
                 Server.Gui.EnterLog(IPPort + " Disconnected");
                 Socket.Close();
             }
+        }
+
+        /// <summary>
+        /// Removes a random resource from the player's hand
+        /// </summary>
+        /// <returns>The resource that was removed</returns>
+        public Resource TakeRandomResource()
+        {
+            int index = Game.random.Next(0, resources.Count);
+            Resource taking = resources[index];
+            resources.RemoveAt(index);
+            return taking;
         }
     }
 }

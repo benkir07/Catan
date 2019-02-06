@@ -4,8 +4,8 @@ using UnityEngine;
 
 public static class Prefabs
 {
-    public static Dictionary<Color, Material> Colors { get; } = new Dictionary<Color, Material>();
-    public static Dictionary<Color, Material> Tranparents { get; } = new Dictionary<Color, Material>();
+    public static Dictionary<PlayerColor, Material> Colors { get; } = new Dictionary<PlayerColor, Material>();
+    public static Dictionary<PlayerColor, Material> Tranparents { get; } = new Dictionary<PlayerColor, Material>();
 
     public static Dictionary<string, GameObject> Tiles { get; } = new Dictionary<string, GameObject>();
     public static Dictionary<string, GameObject> Roads { get; } = new Dictionary<string, GameObject>();
@@ -13,6 +13,12 @@ public static class Prefabs
 
     public static Dictionary<Resource, Sprite> ResourceCards = new Dictionary<Resource, Sprite>();
 
+    public static GameObject CardPrefab;
+    public static GameObject Dice;
+    public static GameObject Robber;
+    public static GameObject Arrow;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     /// <summary>
     /// loads the needed prefabs into the prefabs lists
     /// </summary>
@@ -20,15 +26,15 @@ public static class Prefabs
     {
         TextInfo myTI = new CultureInfo("en-US", false).TextInfo;
 
-        //Color Prebfabs
+        //PlayerColor Prebfabs
         foreach (Object material in Resources.LoadAll("Materials/Colors", typeof(Material)))
         {
-            Colors[(Color)System.Enum.Parse(typeof(Color), myTI.ToTitleCase(material.name.ToLower()))] = (Material)material;
+            Colors[(PlayerColor)System.Enum.Parse(typeof(PlayerColor), myTI.ToTitleCase(material.name.ToLower()))] = (Material)material;
         }
         //Transparents
         foreach (Object material in Resources.LoadAll("Materials/Transparent", typeof(Material)))
         {
-            Tranparents[(Color)System.Enum.Parse(typeof(Color), myTI.ToTitleCase(material.name.ToLower()))] = (Material)material;
+            Tranparents[(PlayerColor)System.Enum.Parse(typeof(PlayerColor), myTI.ToTitleCase(material.name.ToLower()))] = (Material)material;
         }
 
         //Tiles prebfabs
@@ -56,12 +62,20 @@ public static class Prefabs
         }
 
         //Single Card Prefab
-        ResourceCard.CardPrefab = (GameObject)Resources.Load("Cards/Card");
+        CardPrefab = (GameObject)Resources.Load("Cards/Card");
 
         //Resource Cards prefabs
         foreach (Object card in Resources.LoadAll("Cards/Resources", typeof(Sprite)))
         {
             ResourceCards[(Resource)System.Enum.Parse(typeof(Resource), card.name)] = (Sprite)card;
         }
+
+        Dice = (GameObject)Resources.Load("Dice");
+
+        Robber = (GameObject)Resources.Load("Robber");
+
+        Arrow = (GameObject)Resources.Load("Arrow");
+
+        Debug.Log("Loaded Prefabs");
     }
 }

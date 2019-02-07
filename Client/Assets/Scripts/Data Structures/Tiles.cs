@@ -104,7 +104,7 @@ public class ResourceTile : Tile
         }
         if (Num == 6 || Num == 8)
         {
-            text.faceColor = new Color(200, 0, 0);
+            text.color = new Color(200, 0, 0);
         }
         text.SetText(numToken);
     }

@@ -3,8 +3,8 @@ using System.Collections.Generic;
 
 class ResourceCard
 {
-    private const int angel = 5;
-    private const float xOffset = 0.1f;
+    private const int angel = 7;
+    private const float xOffset = 0.8f;
     private const float yOffset = 0.01f;
 
     private Resource Resource { get; }

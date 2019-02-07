@@ -223,7 +223,6 @@ namespace Catan_Server
             int dice1 = random.Next(1, 7);
             int dice2 = random.Next(1, 7);
             int result = dice1 + dice2;
-            result = 7;
             Broadcast(Message.RollDice, dice1.ToString(), dice2.ToString(), result.ToString());
 
             if (result == 7) //The robber!
@@ -308,6 +307,7 @@ namespace Catan_Server
                     active.WriteLine(canStealFrom);
                     PlayerColor stealFrom = (PlayerColor)Enum.Parse(typeof(PlayerColor), active.ReadLine());
                     Resource steal = players[(int)stealFrom].TakeRandomResource();
+                    active.resources.Add(steal);
                     Broadcast(Message.Discard, stealFrom.ToString(), steal.ToString(), DiscardWays.Steal.ToString(), active.PlayerColor.ToString());
                 }
                 #endregion

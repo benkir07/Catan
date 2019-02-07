@@ -9,6 +9,7 @@ public class DiceThrower : MonoBehaviour
     private GameObject[] Dice { get; } = new GameObject[2];
     private Rigidbody[] DiceRbs { get; } = new Rigidbody[2];
     public bool Rolling { get; private set; } = false;
+    private int result;
     private float StartTime;
     private bool Threw;
     private float StopTime;
@@ -42,7 +43,7 @@ public class DiceThrower : MonoBehaviour
         }
     }
 
-    public void ThrowDice(int expected1, int expected2)
+    public void ThrowDice(int expected1, int expected2, int result)
     {
         if (Rolling)
         {
@@ -101,6 +102,7 @@ public class DiceThrower : MonoBehaviour
                 break;
         }
 
+        this.result = result;
         StartTime = Time.time;
         Threw = false;
         Rolling = true;
@@ -164,6 +166,10 @@ public class DiceThrower : MonoBehaviour
                         Dice[i] = null;
                     }
                     Rolling = false;
+                    if (result == 7)
+                    {
+                        GetComponent<Player>().OnScreenText.SetText("Waiting for other players to discard half the cards in their hand");
+                    }
                 }
             }
         }

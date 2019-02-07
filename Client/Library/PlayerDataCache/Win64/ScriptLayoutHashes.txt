@@ -2,7 +2,7 @@ Win64
 PlayerPath?
 G:/Programming/Catan/Client Build/Settlers-of-Catan.exe
 SceneListBegin?
-Assets/Game.unity
+Assets/Main Scene.unity
 SceneListEnd?
 e63944317d2f5958e31963668bb29158 Assembly-CSharp.dll:TMPro.Examples.VertexZoom
 27e5341178f188b89bdc6495710b590c Assembly-CSharp.dll:TMPro.Examples.Benchmark01_UGUI
@@ -220,7 +220,7 @@ e244702e0dc05782229aa524e4d757f5 Assembly-CSharp.dll:TMPro.Examples.TMP_ExampleS
 c463a186dbaebc2629d5ea0782fab3b2 Assembly-CSharp.dll:.Float
 3cae62e09a50c5d5aae8d0536b3d8fde Assembly-CSharp.dll:.ChatController
 5fc094978ce3e3591a7500ed380d854a Unity.Analytics.DataPrivacy.dll:UnityEngine.Analytics.DataPrivacyButton
-7cbe0aa819d14d3374850bf9049bcff4 Assembly-CSharp.dll:.NetworkManager
+71bb6a6b6c8f052f948db64c7dd3ca4f Assembly-CSharp.dll:.NetworkManager
 ac2ac903e4a7184b46548ba428d9e9b2 Assembly-CSharp.dll:.HandManager
 71bb6a6b6c8f052f948db64c7dd3ca4f Assembly-CSharp.dll:cakeslice.Toggle
 47930f3b40e24ef5b3b5e3d9ada7097a Assembly-CSharp.dll:TMPro.Examples.Benchmark01

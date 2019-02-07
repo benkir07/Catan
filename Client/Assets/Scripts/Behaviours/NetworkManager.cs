@@ -3,11 +3,11 @@ using UnityEngine;
 using System.Net.Sockets;
 using System.IO;
 using System.Net;
+using UnityEngine.UI;
+using TMPro;
 
-public class NetworkManager : MonoBehaviour {
-
-    public string serverIP = "127.0.0.1";
-    public int serverPort = 12345;
+public class NetworkManager : MonoBehaviour
+{
     private TcpClient ClientSocket { get; } = new TcpClient();
     private NetworkStream socketStream;
     private StreamReader socketReader;
@@ -29,28 +29,6 @@ public class NetworkManager : MonoBehaviour {
     private void Start()
     {
         player = GetComponent<Player>();
-
-        try
-        {
-            ClientSocket.Connect(IPAddress.Parse(serverIP), serverPort);
-        }
-        catch
-        {
-            Debug.Log("Could not find server at " + serverIP + ":" + serverPort);
-#if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false;
-#else
-         Application.Quit();
-#endif
-            return;
-        }
-
-        socketStream = ClientSocket.GetStream();
-        socketReader = new StreamReader(socketStream);
-        socketWriter = new StreamWriter(socketStream)
-        {
-            AutoFlush = true
-        };
     }
 
     /// <summary>
@@ -58,7 +36,7 @@ public class NetworkManager : MonoBehaviour {
     /// </summary>
     private void Update()
     {
-        if (ClientSocket.Available != 0 && !player.enabled)
+        if (ClientSocket.Connected && ClientSocket.Available != 0 && !player.enabled)
         {
             if (ReadLine() == "Game Start")
             {
@@ -82,6 +60,48 @@ public class NetworkManager : MonoBehaviour {
         {
 
         }
+    }
+
+    /// <summary>
+    /// Connects to the server using parameters on a UI.
+    /// Called by UI elements
+    /// </summary>
+    public void Connect()
+    {
+        Transform canvas = GameObject.Find("Canvas/Connection").transform;
+        string ipString = canvas.Find("IP").GetComponent<InputField>().text;
+        if (!IPAddress.TryParse(ipString, out IPAddress ip))
+        {
+            canvas.Find("Errors").GetComponent<TextMeshProUGUI>().text = "IP address invalid.";
+            print(ipString);
+            return;
+        }
+        string portString = canvas.Find("Port").GetComponent<InputField>().text;
+        if (!int.TryParse(portString, out int port))
+        {
+            canvas.Find("Errors").GetComponent<TextMeshProUGUI>().text = "Port must be a number.";
+            print(portString);
+            return;
+        }
+        try
+        {
+            ClientSocket.Connect(ip, port);
+
+            socketStream = ClientSocket.GetStream();
+            socketReader = new StreamReader(socketStream);
+            socketWriter = new StreamWriter(socketStream)
+            {
+                AutoFlush = true
+            };
+        }
+        catch
+        {
+            canvas.Find("Errors").GetComponent<TextMeshProUGUI>().text = "Could not find server at " + ip + ":" + port + System.Environment.NewLine + "Try another address";
+            return;
+        }
+
+        canvas.gameObject.SetActive(false);
+        GameObject.Find("Canvas").transform.Find("Game").gameObject.SetActive(true);
     }
 
     /// <summary>

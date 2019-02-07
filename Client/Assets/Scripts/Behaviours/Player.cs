@@ -8,6 +8,7 @@ public partial class Player : MonoBehaviour
 {
     private NetworkManager network;
     private HandManager cardsInHand;
+    private DiceThrower dice;
 
     private PlayerColor color;
     private Board Board;
@@ -28,12 +29,17 @@ public partial class Player : MonoBehaviour
     private void Start()
     {
         network = GetComponent<NetworkManager>();
-        cardsInHand = gameObject.AddComponent<HandManager>();
+        dice = GetComponent<DiceThrower>();
+        cardsInHand = GetComponent<HandManager>();
+
+        dice.enabled = true;
+        cardsInHand.enabled = true;
+
 
         color = (PlayerColor)Enum.Parse(typeof(PlayerColor), network.ReadLine());
         Board = new Board(network.Deserialize<SerializableBoard>());
 
-        canvas = GameObject.Find("Canvas");
+        canvas = GameObject.Find("Canvas/Game");
         OnScreenText = canvas.transform.Find("Message").GetComponent<TextMeshProUGUI>();
         canvas.transform.Find("Turns").gameObject.SetActive(true);
     }
@@ -216,13 +222,7 @@ public partial class Player : MonoBehaviour
                 }
             case Message.RollDice:
                 {
-                    GetComponent<DiceThrower>().ThrowDice(int.Parse(network.ReadLine()), int.Parse(network.ReadLine()));
-                    int result = int.Parse(network.ReadLine());
-                    Debug.Log("Rolled a " + result);
-                    if (result == 7)
-                    {
-                        OnScreenText.SetText("Waiting for other players to discard half the cards in their hand");
-                    }
+                    GetComponent<DiceThrower>().ThrowDice(int.Parse(network.ReadLine()), int.Parse(network.ReadLine()), int.Parse(network.ReadLine()));
                     break;
                 }
             case Message.MoveRobber:
@@ -344,7 +344,7 @@ public partial class Player : MonoBehaviour
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out RaycastHit hit))
             {
-                if (hit.transform.parent.tag == "Visual")
+                if (hit.transform.parent != null && hit.transform.parent.CompareTag("Visual"))
                 {
                     GameObject oldSelect = GameObject.FindGameObjectWithTag("Selected");
                     if (oldSelect != null)

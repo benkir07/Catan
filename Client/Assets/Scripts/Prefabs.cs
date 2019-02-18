@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Globalization;
 using UnityEngine;
+using UnityEditor;
 
 public static class Prefabs
 {
@@ -12,6 +13,7 @@ public static class Prefabs
     public static Dictionary<string, GameObject> Buildings { get; } = new Dictionary<string, GameObject>();
 
     public static Dictionary<Resource, Sprite> ResourceCards = new Dictionary<Resource, Sprite>();
+    public static Sprite CardBack;
 
     public static GameObject CardPrefab;
     public static GameObject Dice;
@@ -69,6 +71,10 @@ public static class Prefabs
         {
             ResourceCards[(Resource)System.Enum.Parse(typeof(Resource), card.name)] = (Sprite)card;
         }
+
+        Texture2D cardBackTexture = (Texture2D)Resources.Load("Cards/CardBack");
+
+        CardBack = Sprite.Create(cardBackTexture, new Rect(0, 0, cardBackTexture.width, cardBackTexture.height), new Vector2(0.5f, 0.5f));
 
         Dice = (GameObject)Resources.Load("Dice");
 

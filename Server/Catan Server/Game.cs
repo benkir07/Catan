@@ -219,129 +219,137 @@ namespace Catan_Server
 
             //Dice Roll
             active.WriteLine(Message.PromptDiceRoll.ToString());
-            active.ReadLine();
-            int dice1 = random.Next(1, 7);
-            int dice2 = random.Next(1, 7);
-            int result = dice1 + dice2;
-            Broadcast(Message.RollDice, dice1.ToString(), dice2.ToString(), result.ToString());
-
-            if (result == 7) //The robber!
+            if (active.ReadLine() == "OK")
             {
-                #region Discard if more than 7
-                List<Player> discarding = new List<Player>();
-                foreach (Player player in players)
+                int dice1 = random.Next(1, 7);
+                int dice2 = random.Next(1, 7);
+
+                //dice1 = 3;
+                //dice2 = 4;
+
+                int result = dice1 + dice2;
+                Broadcast(Message.RollDice, dice1.ToString(), dice2.ToString(), result.ToString());
+
+                if (result == 7) //The robber!
                 {
-                    if (player.resources.Count >= 7)
+                    #region Discard if more than 7
+                    List<Player> discarding = new List<Player>();
+                    foreach (Player player in players)
                     {
-                        player.WriteLine(Message.CutHand.ToString());
-                        player.WriteLine(Math.Ceiling(player.resources.Count / 2f).ToString());
-                        discarding.Add(player);
-                    }
-                }
-                while (discarding.Count > 0)
-                {
-                    List<Player> done = new List<Player>();
-                    foreach (Player player in discarding)
-                    {
-                        if (player.CharsToRead > 0)
+                        if (player.resources.Count >= 7)
                         {
-                            string cards = player.ReadLine();
-                            foreach (string card in cards.Split(' '))
-                            {
-                                Resource resource = (Resource)Enum.Parse(typeof(Resource), card);
-                                if (player.resources.Contains(resource))
-                                {
-                                    player.resources.Remove(resource);
-                                    Broadcast(Message.Discard, player.PlayerColor.ToString(), resource.ToString(), DiscardWays.Robber.ToString());
-                                }
-                                else
-                                {
-                                    throw new Exception("Player does not have a resource");
-                                }
-                            }
-                            done.Add(player);
+                            player.WriteLine(Message.CutHand.ToString());
+                            player.WriteLine(Math.Ceiling(player.resources.Count / 2f).ToString());
+                            discarding.Add(player);
                         }
                     }
-                    foreach (Player player in done)
+                    while (discarding.Count > 0)
                     {
-                        discarding.Remove(player);
-                    }
-                }
-                #endregion
-
-                int col, row;
-                #region Move robber
-                List<(int, int)> tilesCanMoveTo = new List<(int, int)>();
-                for (col = 1; col < Board.Tiles.Length - 1; col++)
-                {
-                    for (row = 1; row < Board.Tiles[col].Length - 1; row++)
-                    {
-                        if (!Board.RobberPlace.Equals((col, row)))
+                        List<Player> done = new List<Player>();
+                        foreach (Player player in discarding)
                         {
-                            tilesCanMoveTo.Add((col, row));
-                        }
-                    }
-                }
-                Broadcast(Message.MoveRobber, active.PlayerColor.ToString());
-                active.Send(tilesCanMoveTo);
-                string[] colRow = active.ReadLine().Split(' ');
-                col = int.Parse(colRow[0]);
-                row = int.Parse(colRow[1]);
-                Board.RobberPlace = (col, row);
-                Broadcast(Message.RobberTo, col.ToString(), row.ToString());
-                #endregion
-
-                #region Steal
-                string canStealFrom = "";
-                foreach (SerializableCross cross in Board.SurroundingCrossroads(col, row))
-                {
-                    if (cross.PlayerColor != null && cross.PlayerColor != active.PlayerColor) //There is a building
-                    {
-                        canStealFrom += cross.PlayerColor.ToString() + " ";
-                    }
-                }
-                if (canStealFrom.Length > 0)
-                {
-                    canStealFrom = canStealFrom.Substring(0, canStealFrom.Length - 1);
-                    active.WriteLine(Message.ChooseSteal.ToString());
-                    active.WriteLine(canStealFrom);
-                    PlayerColor stealFrom = (PlayerColor)Enum.Parse(typeof(PlayerColor), active.ReadLine());
-                    Resource steal = players[(int)stealFrom].TakeRandomResource();
-                    active.resources.Add(steal);
-                    Broadcast(Message.Discard, stealFrom.ToString(), steal.ToString(), DiscardWays.Steal.ToString(), active.PlayerColor.ToString());
-                }
-                #endregion
-
-            }
-            else //Normal Resource collection
-            {
-                #region Give resources
-                List<(int, int)> producingTiles = this.Board.GetTilesOfNum(result);
-                foreach ((int col, int row) in producingTiles)
-                {
-                    if (!Board.RobberPlace.Equals((col, row))) //makes sure that the robber is not on that tile
-                    {
-                        foreach (SerializableCross cross in Board.SurroundingCrossroads(col, row))
-                        {
-                            if (cross.PlayerColor != null) //There is a building
+                            if (player.CharsToRead > 0)
                             {
-                                foreach (Player player in players)
+                                string cards = player.ReadLine();
+                                foreach (string card in cards.Split(' '))
                                 {
-                                    if (player.PlayerColor == cross.PlayerColor)
+                                    Resource resource = (Resource)Enum.Parse(typeof(Resource), card);
+                                    if (player.resources.Contains(resource))
                                     {
-                                        Resource resource = (Resource)Enum.Parse(typeof(Resource), Board.Tiles[col][row][SerializableBoard.ResourceType]);
-                                        player.resources.Add(resource);
-                                        Broadcast(Message.AddResource, player.PlayerColor.ToString(), col.ToString(), row.ToString(), resource.ToString());
+                                        player.resources.Remove(resource);
+                                        Broadcast(Message.Discard, player.PlayerColor.ToString(), resource.ToString(), DiscardWays.Robber.ToString());
+                                    }
+                                    else
+                                    {
+                                        throw new Exception("Player does not have a resource");
+                                    }
+                                }
+                                done.Add(player);
+                            }
+                        }
+                        foreach (Player player in done)
+                        {
+                            discarding.Remove(player);
+                        }
+                    }
+                    #endregion
+
+                    int col, row;
+                    #region Move robber
+                    List<(int, int)> tilesCanMoveTo = new List<(int, int)>();
+                    for (col = 1; col < Board.Tiles.Length - 1; col++)
+                    {
+                        for (row = 1; row < Board.Tiles[col].Length - 1; row++)
+                        {
+                            if (!Board.RobberPlace.Equals((col, row)))
+                            {
+                                tilesCanMoveTo.Add((col, row));
+                            }
+                        }
+                    }
+                    Broadcast(Message.MoveRobber, active.PlayerColor.ToString());
+                    active.Send(tilesCanMoveTo);
+                    string[] colRow = active.ReadLine().Split(' ');
+                    col = int.Parse(colRow[0]);
+                    row = int.Parse(colRow[1]);
+                    Board.RobberPlace = (col, row);
+                    Broadcast(Message.RobberTo, col.ToString(), row.ToString());
+                    #endregion
+
+                    #region Steal
+                    string canStealFrom = "";
+                    foreach (SerializableCross cross in Board.SurroundingCrossroads(col, row))
+                    {
+                        if (cross.PlayerColor != null && cross.PlayerColor != active.PlayerColor) //There is a building
+                        {
+                            canStealFrom += cross.PlayerColor.ToString() + " ";
+                        }
+                    }
+                    if (canStealFrom.Length > 0)
+                    {
+                        canStealFrom = canStealFrom.Substring(0, canStealFrom.Length - 1);
+                        active.WriteLine(Message.ChooseSteal.ToString());
+                        active.WriteLine(canStealFrom);
+                        PlayerColor stealFrom = (PlayerColor)Enum.Parse(typeof(PlayerColor), active.ReadLine());
+                        Resource steal = players[(int)stealFrom].TakeRandomResource();
+                        active.resources.Add(steal);
+                        Broadcast(Message.Steal, stealFrom.ToString(), active.PlayerColor.ToString(), steal.ToString());
+                    }
+                    #endregion
+
+                }
+                else //Normal Resource collection
+                {
+                    #region Give resources
+                    List<(int, int)> producingTiles = this.Board.GetTilesOfNum(result);
+                    foreach ((int col, int row) in producingTiles)
+                    {
+                        if (!Board.RobberPlace.Equals((col, row))) //makes sure that the robber is not on that tile
+                        {
+                            foreach (SerializableCross cross in Board.SurroundingCrossroads(col, row))
+                            {
+                                if (cross.PlayerColor != null) //There is a building
+                                {
+                                    foreach (Player player in players)
+                                    {
+                                        if (player.PlayerColor == cross.PlayerColor)
+                                        {
+                                            Resource resource = (Resource)Enum.Parse(typeof(Resource), Board.Tiles[col][row][SerializableBoard.ResourceType]);
+                                            player.resources.Add(resource);
+                                            Broadcast(Message.AddResource, player.PlayerColor.ToString(), col.ToString(), row.ToString(), resource.ToString());
+                                        }
                                     }
                                 }
                             }
                         }
                     }
+                    #endregion
                 }
-                #endregion
-            }
 
-            //Build phase
+                //Build phase
+            }
+            else
+                Stop();
         }
     }
 }

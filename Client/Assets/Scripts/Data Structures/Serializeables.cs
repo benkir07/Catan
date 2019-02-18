@@ -10,6 +10,7 @@ public class SerializableBoard
     public const int MainColumn = 5;
     public const int SmallColumn = 3;
     public const int portAmount = 9;
+
     private static Random random = new Random();
     public static int[] portAngels = { 0, 60, 60, 120, 180, 180, 240, 300, 300 };
 
@@ -592,15 +593,15 @@ public enum Message
     RobberTo,
     CutHand,
     Discard,
-    ChooseSteal
+    ChooseSteal,
+    Steal
 }
 
 public enum DiscardWays
 {
     Robber,
     Build,
-    Pay,
-    Steal
+    Pay
 }
 
 public enum TileTypes

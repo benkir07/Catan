@@ -1,50 +1,43 @@
-﻿using System.Linq;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
 class HandManager : MonoBehaviour
 {
     public const float CardSpeed = 0.8f;
+    public Vector3 HandPos { get; protected set; } //default card in hand place
 
-    public int CardsToDiscard = 0;
-    private List<Resource> Hand { get; } = new List<Resource>();
-    private ResourceCard[] visualHand;
-    private List<(GameObject, Vector3)> Animated = new List<(GameObject, Vector3)>();
-    private Vector3 moveTowards; //default card in hand place
-    private List<Resource> Discarding;
-    private GameObject canvas;
+    protected int CardsInHand;
+    protected GameObject[] Hand;
+    protected List<(GameObject, Vector3)> Animated { get; } = new List<(GameObject, Vector3)>();
+
 
     /// <summary>
     /// Runs as the game starts and initializes the Hand
     /// </summary>
-    public void Start()
+    public virtual void Start()
     {
-        canvas = GetComponent<Player>().canvas;
-        moveTowards = Prefabs.CardPrefab.transform.position;
+        CardsInHand = 0;
 
-        Hand.Sort();
-        visualHand = ResourceCard.GenerateHand(Hand, this.transform);
+        HandPos = Prefabs.CardPrefab.transform.localPosition;
+
+        Hand = ResourceCard.GenerateHand(CardsInHand, this.transform);
     }
 
     /// <summary>
-    /// Checks for changes in the Hand and updates the visual Hand
+    /// Checks for changes in the card amount and updates the visual Hand.
     /// </summary>
-    public void Update()
+    public virtual void Update()
     {
-        #region Moving cards animation
         List<(GameObject, Vector3)> remove = new List<(GameObject, Vector3)>();
         foreach ((GameObject card, Vector3 towards) in Animated)
         {
-            Vector3 cardPosition = card.transform.position;
-            card.transform.position = Vector3.MoveTowards(cardPosition, towards, CardSpeed);
+            card.transform.localPosition = Vector3.MoveTowards(card.transform.localPosition, towards, CardSpeed);
 
-            if (card.transform.position.Equals(towards))
+            if (EqualVectors(card.transform.localPosition, towards))
             {
-                if (towards == moveTowards) //add a card
+                if (towards == HandPos) //if the card is going to the hand
                 {
-                    string resourceName = card.GetComponent<SpriteRenderer>().sprite.name;
-                    Hand.Add((Resource)System.Enum.Parse(typeof(Resource), resourceName));
+                    AddCard(card);
                 }
                 remove.Add((card, towards));
             }
@@ -54,44 +47,6 @@ class HandManager : MonoBehaviour
             Animated.Remove(animated);
             Destroy(animated.Item1);
         }
-        #endregion
-
-        #region Choose to discard
-        if (CardsToDiscard != 0 && Input.GetMouseButtonDown(0))
-        {
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out RaycastHit hit) && hit.collider != null)
-            {
-                if (hit.collider.CompareTag("Card"))
-                {
-                    cakeslice.Outline outline = hit.collider.gameObject.GetComponent<cakeslice.Outline>();
-                    if (outline.eraseRenderer)
-                    {
-                        outline.eraseRenderer = false;
-                        Resource clicked = (Resource)System.Enum.Parse(typeof(Resource), hit.collider.GetComponent<SpriteRenderer>().sprite.name);
-                        Discarding.Add(clicked);
-                    }
-                    else
-                    {
-                        outline.eraseRenderer = true;
-                        Resource clicked = (Resource)System.Enum.Parse(typeof(Resource), hit.collider.GetComponent<SpriteRenderer>().sprite.name);
-                        Discarding.Remove(clicked);
-                    }
-
-                    GameObject vx = canvas.transform.Find("V or X").gameObject;
-                    if (Discarding.Count == CardsToDiscard)
-                    {
-                        vx.SetActive(true);
-                        vx.transform.Find("X").gameObject.SetActive(false);
-                    }
-                    else if (vx.activeSelf)
-                    {
-                        vx.SetActive(false);
-                    }
-                }
-            }
-        }
-        #endregion
 
         SyncCardScreen();
     }
@@ -99,18 +54,17 @@ class HandManager : MonoBehaviour
     /// <summary>
     /// Syncronizes between the cards viewed on screen and the cards saved in the resources list
     /// </summary>
-    private void SyncCardScreen()
+    protected virtual void SyncCardScreen()
     {
-        if (!Hand.SequenceEqual(ResourceCard.Simplize(visualHand)))
+        if (Hand.Length != CardsInHand)
         {
-            foreach (ResourceCard card in visualHand)
+            foreach (GameObject card in Hand)
             {
-                if (card.GameObject != null)
-                    Destroy(card.GameObject);
+                if (card != null)
+                    Destroy(card);
             }
 
-            Hand.Sort();
-            visualHand = ResourceCard.GenerateHand(Hand, this.transform);
+            Hand = ResourceCard.GenerateHand(CardsInHand, this.transform);
         }
     }
 
@@ -119,12 +73,21 @@ class HandManager : MonoBehaviour
     /// </summary>
     /// <param name="card">The resource of the card</param>
     /// <param name="producing">The origin of the resource (to float the card from)</param>
-    public void AddCard(Resource card, Vector3 producing)
+    public void AddAnimation(Resource card, Vector3 producing)
     {
         GameObject newCard = Instantiate(Prefabs.CardPrefab, this.transform);
         newCard.GetComponent<SpriteRenderer>().sprite = Prefabs.ResourceCards[card];
         newCard.transform.position = producing;
-        Animated.Add((newCard, moveTowards));
+        Animated.Add((newCard, HandPos));
+    }
+
+    /// <summary>
+    /// Adds a card to the hand after animation
+    /// </summary>
+    /// <param name="source">The original animated gameobject</param>
+    protected virtual void AddCard(GameObject source)
+    {
+        CardsInHand++;
     }
 
     /// <summary>
@@ -132,57 +95,43 @@ class HandManager : MonoBehaviour
     /// </summary>
     /// <param name="card">The resource to discard</param>
     /// <param name="payTo">The place in world to "throw" it to</param>
-    public void Discard(Resource card, Vector3 payTo)
+    public virtual void DiscardAnimation(Resource card, Vector3 payTo)
     {
-        if (!Hand.Contains(card))
+        if (CardsInHand == 0)
         {
-            throw new System.Exception("Player does not have " + card.ToString() + " in hand");
+            throw new System.Exception("Player does not have cards in hand");
         }
-        Animated.Add((visualHand[Hand.IndexOf(card)].GameObject, payTo));
-        visualHand[Hand.IndexOf(card)].GameObject = null;
-        Hand.Remove(card);
-        SyncCardScreen();
+
+        GameObject discarding = Instantiate(Prefabs.CardPrefab, this.transform);
+        discarding.transform.localPosition = this.HandPos;
+        discarding.transform.parent = null;
+        discarding.GetComponent<SpriteRenderer>().sprite = Prefabs.ResourceCards[card];
+        Animated.Add((discarding, payTo));
+
+        Discard(card);
     }
 
     /// <summary>
-    /// Allows the player to choose cards to discard, and sends to the server the names of the discarded cards
+    /// Takes out a card out of the player's hand
     /// </summary>
-    /// <param name="amount">Cards to discard</param>
-    public void DiscardCards(int amount)
+    /// <param name="discard">The card to discard</param>
+    public virtual void Discard(Resource discard)
     {
-        CardsToDiscard = amount;
-        Discarding = new List<Resource>();
+        CardsInHand--;
+        SyncCardScreen();
+    }
 
-        GameObject vx = canvas.transform.Find("V or X").gameObject;
-        Button V = vx.transform.Find("V").gameObject.GetComponent<Button>();
-        V.onClick.AddListener(() =>
-        {
-            if (Discarding.Count == CardsToDiscard)
-            {
-                foreach (ResourceCard card in visualHand)
-                {
-                    cakeslice.Outline outline = card.GameObject.GetComponent<cakeslice.Outline>();
-                    if (outline != null)
-                    {
-                        Destroy(outline);
-                    }
-                }
-                string discard = "";
-                foreach (Resource card in Discarding)
-                {
-                    discard += card.ToString() + " ";
-                }
-                discard = discard.Substring(0, discard.Length - 1);
-                GetComponent<NetworkManager>().WriteLine(discard);
-                CardsToDiscard = 0;
-                vx.transform.Find("X").gameObject.SetActive(true);
-                vx.SetActive(false);
-                V.onClick.RemoveAllListeners();
-            }
-            else
-            {
-                throw new System.Exception("Not enough cards selected");
-            }
-        });
+
+
+
+    /// <summary>
+    /// Checks whether the vectors are the same or at least very close to each other
+    /// </summary>
+    /// <param name="vector1">The first vector</param>
+    /// <param name="vector2">The second vector</param>
+    /// <returns>Whether or not the vectors are equal.</returns>
+    protected static bool EqualVectors(Vector3 vector1, Vector3 vector2)
+    {
+        return Mathf.Round(vector1.x) == Mathf.Round(vector2.x) && Mathf.Round(vector1.y) == Mathf.Round(vector2.y) && Mathf.Round(vector1.z) == Mathf.Round(vector2.z);
     }
 }

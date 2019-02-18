@@ -7,7 +7,8 @@ using TMPro;
 public partial class Player : MonoBehaviour
 {
     private NetworkManager network;
-    private HandManager cardsInHand;
+    private MyHandManager cardsInHand;
+    private HandManager[] otherHands;
     private DiceThrower dice;
 
     private PlayerColor color;
@@ -22,6 +23,7 @@ public partial class Player : MonoBehaviour
     private State? state = null;
     public GameObject canvas;
     public TextMeshProUGUI OnScreenText;
+    public Transform colorsPanel;
 
     /// <summary>
     /// Runs as the game starts
@@ -30,17 +32,25 @@ public partial class Player : MonoBehaviour
     {
         network = GetComponent<NetworkManager>();
         dice = GetComponent<DiceThrower>();
-        cardsInHand = GetComponent<HandManager>();
+        cardsInHand = GetComponent<MyHandManager>();
+
+        otherHands = new HandManager[3];
+        for (int i = 1; i <= 3; i++)
+        {
+            otherHands[i - 1] = GameObject.Find("NextPlayer" + i).GetComponent<HandManager>();
+        }
 
         dice.enabled = true;
         cardsInHand.enabled = true;
 
-
         color = (PlayerColor)Enum.Parse(typeof(PlayerColor), network.ReadLine());
+
         Board = new Board(network.Deserialize<SerializableBoard>());
 
         canvas = GameObject.Find("Canvas/Game");
         OnScreenText = canvas.transform.Find("Message").GetComponent<TextMeshProUGUI>();
+        colorsPanel = canvas.transform.Find("Colors");
+
         canvas.transform.Find("Turns").gameObject.SetActive(true);
     }
 
@@ -167,10 +177,8 @@ public partial class Player : MonoBehaviour
                     int col = int.Parse(network.ReadLine());
                     int row = int.Parse(network.ReadLine());
                     Resource resource = (Resource)Enum.Parse(typeof(Resource), network.ReadLine());
-                    if (player == this.color)
-                    {
-                        cardsInHand.AddCard(resource, Board.Tiles[(col, row)].GameObject.transform.position); //Temporary!!
-                    }
+
+                    GetHand(player).AddAnimation(resource, Board.Tiles[(col, row)].GameObject.transform.position);
                     break;
                 }
             case Message.Discard:
@@ -183,29 +191,28 @@ public partial class Player : MonoBehaviour
                     {
                         case DiscardWays.Robber:
                             payTo = Board.Robber.transform.position;
-                            if (GetComponent<HandManager>().CardsToDiscard == 0)
+                            if (player == this.color && GetComponent<MyHandManager>().CardsToDiscard == 0)
                                 OnScreenText.SetText("Waiting for other players to discard half the cards in their hand");
                             break;
                         case DiscardWays.Build:
                             break;
                         case DiscardWays.Pay:
                             break;
-                        case DiscardWays.Steal:
-                            PlayerColor thief = (PlayerColor)Enum.Parse(typeof(PlayerColor), network.ReadLine());
-                            payTo = Board.Robber.transform.position;
-                            if (thief == this.color)
-                            {
-                                cardsInHand.AddCard(resource, payTo); //Temporary!!
-                                OnScreenText.SetText("");
-                            }
-                            break;
                         default:
                             break;
                     }
-                    if (player == this.color)
-                    {
-                        cardsInHand.Discard(resource, payTo); //Temporary!!
-                    }
+                    GetHand(player).DiscardAnimation(resource, payTo);
+                    break;
+                }
+            case Message.Steal:
+                {
+                    PlayerColor victim = (PlayerColor)Enum.Parse(typeof(PlayerColor), network.ReadLine());
+                    PlayerColor thief = (PlayerColor)Enum.Parse(typeof(PlayerColor), network.ReadLine());
+                    Resource resource = (Resource)Enum.Parse(typeof(Resource), network.ReadLine());
+
+                    HandManager victimHand = GetHand(victim);
+                    victimHand.Discard(resource);
+                    GetHand(thief).AddAnimation(resource, victimHand.transform.position + victimHand.HandPos);
                     break;
                 }
             case Message.PromptDiceRoll:
@@ -216,7 +223,7 @@ public partial class Player : MonoBehaviour
                     Button buttonComp = button.GetComponent<Button>();
                     buttonComp.onClick.AddListener(GetComponent<DiceThrower>().HideDice);
                     buttonComp.onClick.AddListener(delegate { button.SetActive(false); });
-                    buttonComp.onClick.AddListener(delegate { network.WriteLine("V"); });
+                    buttonComp.onClick.AddListener(delegate { network.WriteLine("OK"); });
                     buttonComp.onClick.AddListener(buttonComp.onClick.RemoveAllListeners);
                     break;
                 }
@@ -268,21 +275,24 @@ public partial class Player : MonoBehaviour
             case Message.ChooseSteal:
                 {
                     string playersCanStealFrom = network.ReadLine();
-                    Transform colors = canvas.transform.Find("Colors");
+                    
+                    colorsPanel.Find("Panel").gameObject.SetActive(true);
                     foreach (string player in playersCanStealFrom.Split(' '))
                     {
                         PlayerColor color = (PlayerColor)Enum.Parse(typeof(PlayerColor), player);
                         Debug.Log(color);
-                        GameObject button = colors.Find(color.ToString()).gameObject;
+                        GameObject button = colorsPanel.Find(color.ToString()).gameObject;
                         button.SetActive(true);
                         button.GetComponent<Button>().onClick.AddListener(delegate
                         {
                             network.WriteLine(button.name);
-                            foreach (Button colorButton in colors.GetComponentsInChildren<Button>())
+                            foreach (Button colorButton in colorsPanel.GetComponentsInChildren<Button>())
                             {
                                 colorButton.onClick.RemoveAllListeners();
                                 colorButton.gameObject.SetActive(false);
                             }
+                            OnScreenText.SetText("");
+                            colorsPanel.Find("Panel").gameObject.SetActive(false);
                         });
                     }
                     OnScreenText.SetText("Choose a player to steal from");
@@ -423,5 +433,23 @@ public partial class Player : MonoBehaviour
             vx.transform.Find("X").gameObject.SetActive(true);
         }
         vx.SetActive(false);
+    }
+
+    /// <summary>
+    /// Gets the hand manager for a specific player by color
+    /// </summary>
+    /// <param name="player">The player's color</param>
+    /// <returns>The player's hand manager</returns>
+    private HandManager GetHand(PlayerColor player)
+    {
+        if (player == this.color)
+            return this.cardsInHand;
+        else
+        {
+            int handIndex = (int)player - (int)this.color - 1;
+            if (handIndex < 0)
+                handIndex += otherHands.Length + 1;
+            return otherHands[handIndex];
+        }
     }
 }

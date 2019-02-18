@@ -16,9 +16,9 @@ public class DiceThrower : MonoBehaviour
 
     public void ShowDice()
     {
-        if (Rolling)
+        if (DiceExist())
         {
-            Debug.LogWarning("There are already dice rolling");
+            Debug.LogError("There are already dice");
             return;
         }
 
@@ -39,7 +39,7 @@ public class DiceThrower : MonoBehaviour
         }
         catch
         {
-            Debug.LogWarning("There are no rolling dice");
+            Debug.LogError("There are no rolling dice");
         }
     }
 
@@ -47,7 +47,7 @@ public class DiceThrower : MonoBehaviour
     {
         if (Rolling)
         {
-            Debug.LogWarning("There are already dice rolling");
+            Debug.LogError("There are already dice rolling");
             return;
         }
 
@@ -106,6 +106,11 @@ public class DiceThrower : MonoBehaviour
         StartTime = Time.time;
         Threw = false;
         Rolling = true;
+    }
+
+    private bool DiceExist()
+    {
+        return Dice[0] != null || Dice[1] != null;
     }
 
     void Update()

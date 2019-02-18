@@ -1507,8 +1507,6 @@ G:\Programming\Catan\Client\Temp\bin\Debug\Unity.Analytics.StandardEvents.dll
 G:\Programming\Catan\Client\Temp\bin\Debug\Unity.Analytics.Tracker.dll
 G:\Programming\Catan\Client\Temp\bin\Debug\Unity.Locator.dll
 G:\Programming\Catan\Client\Temp\bin\Debug\Unity.PackageManagerUI.Editor.dll
-G:\Programming\Catan\Client\Temp\bin\Debug\Unity.TextMeshPro.dll
-G:\Programming\Catan\Client\Temp\bin\Debug\Unity.TextMeshPro.Editor.dll
 G:\Programming\Catan\Client\Temp\bin\Debug\UnityEditor.dll
 G:\Programming\Catan\Client\Temp\bin\Debug\UnityEngine.AccessibilityModule.dll
 G:\Programming\Catan\Client\Temp\bin\Debug\UnityEngine.AIModule.dll
@@ -1594,9 +1592,7 @@ G:\Programming\Catan\Client\Temp\bin\Debug\Unity.Cecil.Pdb.dll
 G:\Programming\Catan\Client\Temp\bin\Debug\Unity.Cecil.Mdb.dll
 G:\Programming\Catan\Client\Temp\bin\Debug\UnityEngine.xml
 G:\Programming\Catan\Client\Temp\bin\Debug\UnityEditor.xml
-G:\Programming\Catan\Client\Temp\bin\Debug\Unity.TextMeshPro.Editor.pdb
 G:\Programming\Catan\Client\Temp\bin\Debug\Unity.PackageManagerUI.Editor.pdb
-G:\Programming\Catan\Client\Temp\bin\Debug\Unity.TextMeshPro.pdb
 G:\Programming\Catan\Client\Temp\bin\Debug\Unity.Analytics.DataPrivacy.pdb
 G:\Programming\Catan\Client\Temp\bin\Debug\UnityEngine.AIModule.xml
 G:\Programming\Catan\Client\Temp\bin\Debug\UnityEngine.ARModule.xml
@@ -1669,3 +1665,5 @@ G:\Programming\Catan\Client\obj\Debug\Assembly-CSharp.csproj.CoreCompileInputs.c
 G:\Programming\Catan\Client\obj\Debug\Assembly-CSharp.csproj.CopyComplete
 G:\Programming\Catan\Client\obj\Debug\Assembly-CSharp.dll
 G:\Programming\Catan\Client\obj\Debug\Assembly-CSharp.pdb
+G:\Programming\Catan\Client\Temp\bin\Debug\TextMeshPro-2017.3-Editor.dll
+G:\Programming\Catan\Client\Temp\bin\Debug\TextMeshPro-2017.3-Runtime.dll

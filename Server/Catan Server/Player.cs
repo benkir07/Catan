@@ -18,13 +18,7 @@ namespace Catan_Server
                 return Socket.Available;
             }
         }
-        public EndPoint IPPort
-        {
-            get
-            {
-                return Socket.Client.RemoteEndPoint;
-            }
-        } 
+        public EndPoint IPPort { get; }
         public PlayerColor PlayerColor { get; }
         public List<Resource> resources = new List<Resource>();
         private StreamReader ReadFrom { get; }
@@ -38,6 +32,7 @@ namespace Catan_Server
         public Player(TcpClient socket, PlayerColor color)
         {
             this.Socket = socket;
+            this.IPPort = socket.Client.RemoteEndPoint;
             this.PlayerColor = color;
 
             ReadFrom = new StreamReader(socket.GetStream());

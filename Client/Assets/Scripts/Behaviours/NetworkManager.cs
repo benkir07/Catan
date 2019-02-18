@@ -69,14 +69,14 @@ public class NetworkManager : MonoBehaviour
     public void Connect()
     {
         Transform canvas = GameObject.Find("Canvas/Connection").transform;
-        string ipString = canvas.Find("IP").GetComponent<InputField>().text;
+        string ipString = canvas.Find("IP").GetComponent<TMP_InputField>().text;
         if (!IPAddress.TryParse(ipString, out IPAddress ip))
         {
             canvas.Find("Errors").GetComponent<TextMeshProUGUI>().text = "IP address invalid.";
             print(ipString);
             return;
         }
-        string portString = canvas.Find("Port").GetComponent<InputField>().text;
+        string portString = canvas.Find("Port").GetComponent<TMP_InputField>().text;
         if (!int.TryParse(portString, out int port))
         {
             canvas.Find("Errors").GetComponent<TextMeshProUGUI>().text = "Port must be a number.";

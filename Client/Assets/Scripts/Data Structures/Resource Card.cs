@@ -23,7 +23,7 @@ class ResourceCard
         GameObject = GameObject.Instantiate(Prefabs.CardPrefab, parent);
         GameObject.tag = "Card";
         GameObject.GetComponent<SpriteRenderer>().sprite = Prefabs.ResourceCards[Resource];
-        GameObject.transform.position += position;
+        GameObject.transform.localPosition += position;
         GameObject.transform.eulerAngles += rotation;
     }
 
@@ -31,8 +31,8 @@ class ResourceCard
     /// Shows a hand of cards on screen.
     /// </summary>
     /// <param name="cardsInHand">The cards to show in hand</param>
-    /// <param name="parent">The transforom to parent the cards to</param>
-    /// <returns>The visual cards</returns>
+    /// <param name="parent">The transform to parent the cards to</param>
+    /// <returns>The cards</returns>
     public static ResourceCard[] GenerateHand(List<Resource> cardsInHand, Transform parent)
     {
         int angelOffset = - angel * (cardsInHand.Count / 2);
@@ -44,9 +44,35 @@ class ResourceCard
         {
             currHand[i] = new ResourceCard(cardsInHand[i], parent, new Vector3(curXOffset, curYOffset), new Vector3(0, 0, angelOffset));
             currHand[i].GameObject.GetComponent<SpriteRenderer>().sortingOrder = i;
+
             angelOffset += angel;
             curXOffset -= xOffset;
             curYOffset += yOffset;
+        }
+        return currHand;
+    }
+
+    /// <summary>
+    /// Shows a hand of card backs on screen.
+    /// </summary>
+    /// <param name="amountOfCards">Amount of cards to show</param>
+    /// <param name="parent">The transform to parent the cards to</param>
+    /// <returns>The cards</returns>
+    public static GameObject[] GenerateHand(int amountOfCards, Transform parent)
+    {
+        int angelOffset = -angel * (amountOfCards / 2);
+        float curXOffset = xOffset * (amountOfCards / 2);
+
+        GameObject[] currHand = new GameObject[amountOfCards];
+        for (int i = 0; i < amountOfCards; i++)
+        {
+            currHand[i] = GameObject.Instantiate(Prefabs.CardPrefab, parent);
+            currHand[i].transform.localPosition += new Vector3(curXOffset, 0);
+            currHand[i].transform.eulerAngles += new Vector3(0, 0, angelOffset);
+            currHand[i].GetComponent<SpriteRenderer>().sprite = Prefabs.CardBack;
+
+            angelOffset += angel;
+            curXOffset -= xOffset;
         }
         return currHand;
     }

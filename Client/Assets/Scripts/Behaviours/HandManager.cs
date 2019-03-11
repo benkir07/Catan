@@ -1,18 +1,33 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-class HandManager : MonoBehaviour
+public class HandManager : MonoBehaviour
 {
-    public const float CardSpeed = 0.8f;
-    public Vector3 HandPos { get; protected set; } //default card in hand place
+    public const float CardSpeed = 40f;
 
+    public virtual int CardAmount
+    {
+        get
+        {
+            return CardsInHand;
+        }
+    }
+    public int AnimatedCards
+    {
+        get
+        {
+            return Animated.Count;
+        }
+    }
+
+    public Vector3 HandPos { get; protected set; } //default position of a card in hand.
     protected int CardsInHand;
     protected GameObject[] Hand;
     protected List<(GameObject, Vector3)> Animated { get; } = new List<(GameObject, Vector3)>();
 
 
     /// <summary>
-    /// Runs as the game starts and initializes the Hand
+    /// Runs as the game starts and initializes the Hand.
     /// </summary>
     public virtual void Start()
     {
@@ -31,7 +46,7 @@ class HandManager : MonoBehaviour
         List<(GameObject, Vector3)> remove = new List<(GameObject, Vector3)>();
         foreach ((GameObject card, Vector3 towards) in Animated)
         {
-            card.transform.localPosition = Vector3.MoveTowards(card.transform.localPosition, towards, CardSpeed);
+            card.transform.localPosition = Vector3.MoveTowards(card.transform.localPosition, towards, CardSpeed * Time.deltaTime);
 
             if (EqualVectors(card.transform.localPosition, towards))
             {
@@ -52,7 +67,7 @@ class HandManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Syncronizes between the cards viewed on screen and the cards saved in the resources list
+    /// Syncronizes between the cards viewed on screen and the cards saved in the resources list.
     /// </summary>
     protected virtual void SyncCardScreen()
     {
@@ -69,7 +84,7 @@ class HandManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Adds a card to the player's hand, with an animation
+    /// Adds a card to the player's hand, with an animation.
     /// </summary>
     /// <param name="card">The resource of the card</param>
     /// <param name="producing">The origin of the resource (to float the card from)</param>
@@ -82,7 +97,7 @@ class HandManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Adds a card to the hand after animation
+    /// Adds a card to the hand after animation.
     /// </summary>
     /// <param name="source">The original animated gameobject</param>
     protected virtual void AddCard(GameObject source)
@@ -91,7 +106,7 @@ class HandManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Discards a card, with an animation
+    /// Discards a card, with an animation.
     /// </summary>
     /// <param name="card">The resource to discard</param>
     /// <param name="payTo">The place in world to "throw" it to</param>
@@ -112,7 +127,7 @@ class HandManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Takes out a card out of the player's hand
+    /// Takes out a card out of the player's hand.
     /// </summary>
     /// <param name="discard">The card to discard</param>
     public virtual void Discard(Resource discard)
@@ -121,15 +136,12 @@ class HandManager : MonoBehaviour
         SyncCardScreen();
     }
 
-
-
-
     /// <summary>
-    /// Checks whether the vectors are the same or at least very close to each other
+    /// Checks whether the vectors are the same or at least very close to each other.
     /// </summary>
     /// <param name="vector1">The first vector</param>
     /// <param name="vector2">The second vector</param>
-    /// <returns>Whether or not the vectors are equal.</returns>
+    /// <returns>Whether or not the vectors are equal</returns>
     protected static bool EqualVectors(Vector3 vector1, Vector3 vector2)
     {
         return Mathf.Round(vector1.x) == Mathf.Round(vector2.x) && Mathf.Round(vector1.y) == Mathf.Round(vector2.y) && Mathf.Round(vector1.z) == Mathf.Round(vector2.z);

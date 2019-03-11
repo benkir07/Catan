@@ -3,13 +3,11 @@ using UnityEngine;
 using System.Net.Sockets;
 using System.IO;
 using System.Net;
-using UnityEngine.UI;
 using TMPro;
 
 public class NetworkManager : MonoBehaviour
 {
     private TcpClient ClientSocket { get; } = new TcpClient();
-    private NetworkStream socketStream;
     private StreamReader socketReader;
     private StreamWriter socketWriter;
 
@@ -21,34 +19,24 @@ public class NetworkManager : MonoBehaviour
         }
     }
 
-    private Player player;
-
     /// <summary>
-    /// Runs as the program starts, connects to the server.
-    /// </summary>
-    private void Start()
-    {
-        player = GetComponent<Player>();
-    }
-
-    /// <summary>
-    /// Runs every tick, waits for server to say ready for game start
+    /// Runs every tick, waits for server to sign that it's ready for game start.
     /// </summary>
     private void Update()
     {
-        if (ClientSocket.Connected && ClientSocket.Available != 0 && !player.enabled)
+        if (ClientSocket.Connected && ClientSocket.Available != 0 && !GetComponent<Player>().enabled)
         {
             if (ReadLine() == "Game Start")
             {
                 GameObject.Find("Wait Message").SetActive(false);
-                player.enabled = true;
+                GetComponent<Player>().enabled = true;
             }
         }
     }
 
     /// <summary>
-    /// Runs as the application closes
-    /// Closes the connection with the server
+    /// Runs right before the application closes.
+    /// Closes the connection with the server.
     /// </summary>
     void OnApplicationQuit()
     {
@@ -64,7 +52,7 @@ public class NetworkManager : MonoBehaviour
 
     /// <summary>
     /// Connects to the server using parameters on a UI.
-    /// Called by UI elements
+    /// Called by UI elements.
     /// </summary>
     public void Connect()
     {
@@ -87,9 +75,8 @@ public class NetworkManager : MonoBehaviour
         {
             ClientSocket.Connect(ip, port);
 
-            socketStream = ClientSocket.GetStream();
-            socketReader = new StreamReader(socketStream);
-            socketWriter = new StreamWriter(socketStream)
+            socketReader = new StreamReader(ClientSocket.GetStream());
+            socketWriter = new StreamWriter(ClientSocket.GetStream())
             {
                 AutoFlush = true
             };
@@ -105,7 +92,7 @@ public class NetworkManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Writes a message to the server
+    /// Writes a message to the server.
     /// </summary>
     /// <param name="message">The message to write</param>
     public void WriteLine(string message)
@@ -114,13 +101,13 @@ public class NetworkManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Reads a message from the server
+    /// Reads a message from the server.
     /// </summary>
-    /// <returns>The message</returns>
+    /// <returns>The message sent from the server</returns>
     public string ReadLine()
     {
         string data = socketReader.ReadLine();
-        socketWriter.WriteLine("V");
+        socketWriter.WriteLine("Got it");
         //print(data);
         return data;
     }
@@ -137,7 +124,6 @@ public class NetworkManager : MonoBehaviour
         int len = int.Parse(ReadLine());
         char[] xmlString = new char[len];
         socketReader.Read(xmlString, 0, len);
-        socketReader.ReadLine(); //There is always a spare newline after my way of serialization
         socketWriter.WriteLine("V");
 
         StringReader xml = new StringReader(new string(xmlString));

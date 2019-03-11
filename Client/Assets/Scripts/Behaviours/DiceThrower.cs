@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class DiceThrower : MonoBehaviour
 {
-    public float WaitTime = 1f; //The amount seconds that the dice will roll and stay still.
+    public const float WaitTime = 1f; //The amount seconds that the dice will roll and stay still.
 
     private GameObject[] Dice { get; } = new GameObject[2];
     private Rigidbody[] DiceRbs { get; } = new Rigidbody[2];
@@ -14,106 +14,11 @@ public class DiceThrower : MonoBehaviour
     private bool Threw;
     private float StopTime;
 
-    public void ShowDice()
-    {
-        if (DiceExist())
-        {
-            Debug.LogError("There are already dice");
-            return;
-        }
-
-        Dice[0] = Instantiate(Prefabs.Dice, this.transform);
-        Dice[0].transform.position -= new Vector3(3, 0);
-
-        Dice[1] = Instantiate(Prefabs.Dice, this.transform);
-    }
-
-    public void HideDice()
-    {
-        try
-        {
-            foreach (GameObject die in Dice)
-            {
-                Destroy(die);
-            }
-        }
-        catch
-        {
-            Debug.LogError("There are no rolling dice");
-        }
-    }
-
-    public void ThrowDice(int expected1, int expected2, int result)
-    {
-        if (Rolling)
-        {
-            Debug.LogError("There are already dice rolling");
-            return;
-        }
-
-        Dice[0] = Instantiate(Prefabs.Dice, this.transform);
-        Dice[0].transform.position -= new Vector3(3, 0);
-        DiceRbs[0] = Dice[0].GetComponent<Rigidbody>();
-        Transform toRotate = Dice[0].transform.GetChild(0);
-        switch (expected1)
-        {
-            case 1:
-                toRotate.eulerAngles = new Vector3(0, 90, 0);
-                break;
-            case 2:
-                toRotate.eulerAngles = new Vector3(0, 0, 90);
-                break;
-            case 3:
-                toRotate.eulerAngles = new Vector3(0, 180, 0);
-                break;
-            case 4:
-                toRotate.eulerAngles = new Vector3(0, 0, 0);
-                break;
-            case 5:
-                toRotate.eulerAngles = new Vector3(0, 0, 270);
-                break;
-            case 6:
-                toRotate.eulerAngles = new Vector3(0, 270, 0);
-                break;
-        }
-
-        Dice[1] = Instantiate(Prefabs.Dice, this.transform);
-        DiceRbs[1] = Dice[1].GetComponent<Rigidbody>();
-        toRotate = Dice[1].transform.GetChild(0);
-        switch (expected2)
-        {
-            case 1:
-                toRotate.eulerAngles = new Vector3(270, 0, 0);
-                break;
-            case 2:
-                toRotate.eulerAngles = new Vector3(180, 0, 0);
-                break;
-            case 3:
-                toRotate.eulerAngles = new Vector3(0, 0, 270);
-                break;
-            case 4:
-                toRotate.eulerAngles = new Vector3(0, 0, 90);
-                break;
-            case 5:
-                toRotate.eulerAngles = new Vector3(0, 0, 0);
-                break;
-            case 6:
-                toRotate.eulerAngles = new Vector3(90, 0, 0);
-                break;
-        }
-
-        this.result = result;
-        StartTime = Time.time;
-        Threw = false;
-        Rolling = true;
-    }
-
-    private bool DiceExist()
-    {
-        return Dice[0] != null || Dice[1] != null;
-    }
-
-    void Update()
+    /// <summary>
+    /// Runs every tick.
+    /// Does the dice animation, throwing and disappearing at the end.
+    /// </summary>
+    private void Update()
     {
         if (Rolling)
         {
@@ -165,11 +70,7 @@ public class DiceThrower : MonoBehaviour
                 }
                 else if (Time.time >= StopTime + WaitTime)
                 {
-                    for (int i = 0; i < Dice.Length; i++)
-                    {
-                        Destroy(Dice[i]);
-                        Dice[i] = null;
-                    }
+                    HideDice();
                     Rolling = false;
                     if (result == 7)
                     {
@@ -177,6 +78,113 @@ public class DiceThrower : MonoBehaviour
                     }
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// Creates the dice on screen.
+    /// </summary>
+    public void ShowDice()
+    {
+        if (Rolling)
+        {
+            Debug.LogError("There are already dice");
+            return;
+        }
+
+        Dice[0] = Instantiate(Prefabs.Dice, this.transform);
+        Dice[0].transform.position -= new Vector3(3, 0);
+
+        Dice[1] = Instantiate(Prefabs.Dice, this.transform);
+    }
+
+    /// <summary>
+    /// Creates new dice and throws them, resulting in set up results.
+    /// </summary>
+    /// <param name="expected1">The result of the first dice</param>
+    /// <param name="expected2">The result of the second dice</param>
+    /// <param name="result">The sum result</param>
+    public void ThrowDice(int expected1, int expected2, int result)
+    {
+        if (Rolling)
+        {
+            Debug.LogError("There are already dice rolling");
+            return;
+        }
+
+        ShowDice();
+        DiceRbs[0] = Dice[0].GetComponent<Rigidbody>();
+        DiceRbs[1] = Dice[1].GetComponent<Rigidbody>();
+
+        Transform toRotate = Dice[0].transform.GetChild(0);
+        switch (expected1)
+        {
+            case 1:
+                toRotate.eulerAngles = new Vector3(0, 90, 0);
+                break;
+            case 2:
+                toRotate.eulerAngles = new Vector3(0, 0, 90);
+                break;
+            case 3:
+                toRotate.eulerAngles = new Vector3(0, 180, 0);
+                break;
+            case 4:
+                toRotate.eulerAngles = new Vector3(0, 0, 0);
+                break;
+            case 5:
+                toRotate.eulerAngles = new Vector3(0, 0, 270);
+                break;
+            case 6:
+                toRotate.eulerAngles = new Vector3(0, 270, 0);
+                break;
+        }
+
+
+        toRotate = Dice[1].transform.GetChild(0);
+        switch (expected2)
+        {
+            case 1:
+                toRotate.eulerAngles = new Vector3(270, 0, 0);
+                break;
+            case 2:
+                toRotate.eulerAngles = new Vector3(180, 0, 0);
+                break;
+            case 3:
+                toRotate.eulerAngles = new Vector3(0, 0, 270);
+                break;
+            case 4:
+                toRotate.eulerAngles = new Vector3(0, 0, 90);
+                break;
+            case 5:
+                toRotate.eulerAngles = new Vector3(0, 0, 0);
+                break;
+            case 6:
+                toRotate.eulerAngles = new Vector3(90, 0, 0);
+                break;
+        }
+
+        this.result = result;
+        StartTime = Time.time;
+        Threw = false;
+        Rolling = true;
+    }
+
+    /// <summary>
+    /// Hides the dice.
+    /// </summary>
+    public void HideDice()
+    {
+        try
+        {
+            for (int i = 0; i < Dice.Length; i++)
+            {
+                Destroy(Dice[i]);
+                Dice[i] = null;
+            }
+        }
+        catch
+        {
+            Debug.LogError("There are no rolling dice");
         }
     }
 }

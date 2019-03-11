@@ -5,9 +5,13 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.IO;
+using System.Xml.Serialization;
 
 namespace Catan_Server
 {
+    /// <summary>
+    /// The Class responsible for recieving and handling users not playing currently.
+    /// </summary>
     static class Server
     {
         private static Thread server;
@@ -15,7 +19,6 @@ namespace Catan_Server
 
         public const int Port = 12345;
         public static bool online;
-        private static TcpListener serverSocket = new TcpListener(IPAddress.Any, Port);
 
         public static List<TcpClient> Users { get; } = new List<TcpClient>();
         public static List<Game> Games { get; } = new List<Game>();
@@ -23,7 +26,7 @@ namespace Catan_Server
         /// <summary>
         /// The main entry point for the server application.
         /// </summary>
-        static void Main()
+        private static void Main()
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
@@ -36,11 +39,13 @@ namespace Catan_Server
         }
 
         /// <summary>
-        /// Handles the networking with new and existing clients.
-        /// Accepts new clients them and creates Games.
+        /// Handles the networking with new and existing users.
+        /// Accepts new clients and creates Games.
         /// </summary>
-        static void HandleClients()
+        private static void HandleClients()
         {
+            TcpListener serverSocket = new TcpListener(IPAddress.Any, Port);
+
             online = true;
             serverSocket.Start();
 
@@ -79,16 +84,31 @@ namespace Catan_Server
                     disconnect.Close();
                 }
             }
+
+            serverSocket.Stop();
         }
 
         /// <summary>
-        /// Shuts down the server
+        /// Shuts down the server.
         /// </summary>
         public static void Close()
         {
             online = false;
             while (Games.Count > 0 && server.ThreadState == ThreadState.Running) { }
-            serverSocket.Stop();
+        }
+
+        /// <summary>
+        /// Serializes (in Xml format) an object.
+        /// </summary>
+        /// <param name="toSerialize">The object to serialize</param>
+        /// <returns>The xml string</returns>
+        public static string Serialize(object toSerialize)
+        {
+            StringWriter xml = new StringWriter();
+            XmlSerializer serializer = new XmlSerializer(toSerialize.GetType());
+            serializer.Serialize(xml, toSerialize);
+
+            return xml.ToString();
         }
     }
 }

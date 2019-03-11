@@ -4,21 +4,28 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
-class MyHandManager : HandManager
+public class MyHandManager : HandManager
 {
-    public int CardsToDiscard { get; private set; } = 0;
+    public override int CardAmount
+    {
+        get
+        {
+            return CardsInHand.Count;
+        }
+    }
 
     protected new List<Resource> CardsInHand { get; } = new List<Resource>();
     protected new ResourceCard[] Hand;
+    public int CardsToDiscard { get; private set; } = 0;
     protected List<Resource> Discarding;
-    protected GameObject Canvas;
+    protected GameObject canvas;
 
     /// <summary>
-    /// Runs as the game starts and initializes the Hand
+    /// Runs as the game starts and initializes the Hand.
     /// </summary>
     public override void Start()
     {
-        Canvas = GetComponent<Player>().canvas;
+        canvas = GetComponent<Player>().canvas;
 
         HandPos = Prefabs.CardPrefab.transform.localPosition;
 
@@ -28,7 +35,7 @@ class MyHandManager : HandManager
 
     /// <summary>
     /// Checks for changes in the Hand and updates the visual Hand.
-    /// Updates the cards as they are being chosen during the cards to discard selection
+    /// Updates the cards as they are being chosen during the cards to discard selection.
     /// </summary>
     public override void Update()
     {
@@ -53,7 +60,7 @@ class MyHandManager : HandManager
                         Discarding.Remove(clicked);
                     }
 
-                    GameObject vx = Canvas.transform.Find("V or X").gameObject;
+                    GameObject vx = canvas.transform.Find("V or X").gameObject;
                     if (Discarding.Count == CardsToDiscard)
                     {
                         vx.SetActive(true);
@@ -71,7 +78,7 @@ class MyHandManager : HandManager
     }
 
     /// <summary>
-    /// Syncronizes between the cards viewed on screen and the cards saved in the resources list
+    /// Syncronizes between the cards viewed on screen and the cards saved in the resources list.
     /// </summary>
     protected override void SyncCardScreen()
     {
@@ -89,7 +96,7 @@ class MyHandManager : HandManager
     }
 
     /// <summary>
-    /// Adds a card to the hand after animation
+    /// Adds a card to the hand after animation.
     /// </summary>
     /// <param name="source">The original animated gameobject</param>
     protected override void AddCard(GameObject source)
@@ -99,7 +106,7 @@ class MyHandManager : HandManager
     }
 
     /// <summary>
-    /// Discards a card, with an animation
+    /// Discards a card, with an animation.
     /// </summary>
     /// <param name="card">The resource to discard</param>
     /// <param name="payTo">The place in world to "throw" it to</param>
@@ -119,7 +126,7 @@ class MyHandManager : HandManager
     }
 
     /// <summary>
-    /// Takes out a card out of the player's hand
+    /// Takes out a card out of the player's hand.
     /// </summary>
     /// <param name="discard">The card to discard</param>
     public override void Discard(Resource discard)
@@ -129,7 +136,7 @@ class MyHandManager : HandManager
     }
 
     /// <summary>
-    /// Allows the player to choose cards to discard, and sends to the server the names of the discarded cards
+    /// Allows the player to choose cards to discard, and sends to the server the names of the discarded cards.
     /// </summary>
     /// <param name="amount">Cards to discard</param>
     public void DiscardCards(int amount)
@@ -137,7 +144,7 @@ class MyHandManager : HandManager
         CardsToDiscard = amount;
         Discarding = new List<Resource>();
 
-        GameObject vx = Canvas.transform.Find("V or X").gameObject;
+        GameObject vx = canvas.transform.Find("V or X").gameObject;
         Button V = vx.transform.Find("V").gameObject.GetComponent<Button>();
         V.onClick.AddListener(() =>
         {

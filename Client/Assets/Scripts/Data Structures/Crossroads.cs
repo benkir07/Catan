@@ -12,17 +12,17 @@ public class Crossroads : SerializableCross
     public Vector3 Offset { get; }
 
     /// <summary>
-    /// Creates a new crossroad and calculates its placement
+    /// Creates a new crossroad and calculates its placement.
     /// </summary>
-    /// <param name="Column">The crossroad's Column</param>
-    /// <param name="Row">The crossroad's Row</param>
+    /// <param name="column">The crossroad's Column</param>
+    /// <param name="row">The crossroad's Row</param>
     /// <param name="leftDown">The road to the down left of the crossroad</param>
     /// <param name="leftUp">The road to the up left of the crossroad</param>
-    public Crossroads(int Column, int Row, Road leftDown = null, Road leftUp = null) : base(Column, Row, leftDown, leftUp) //Every crossroad will initiate its right Roads and get its left Row from the constructor
+    public Crossroads(int column, int row, Road leftDown = null, Road leftUp = null) : base(column, row, leftDown, leftUp) //Every crossroad will initiate its right Roads and get its left Row from the constructor
     {
         Building = null;
 
-        Offset = CalculateOffset(this.Column, this.Row);
+        Offset = CalculateOffset(this.place);
 
         SetRoads(leftDown, leftUp);
     }
@@ -36,12 +36,11 @@ public class Crossroads : SerializableCross
     /// <param name="leftUp">The road to the up left of the crossroads</param>
     public Crossroads(SerializableCross parent, Road leftDown = null, Road leftUp = null)
     {
-        this.Column = parent.Column;
-        this.Row = parent.Row;
+        this.place = parent.place;
         this.IsCity = false;
         this.PlayerColor = null;
 
-        Offset = CalculateOffset(this.Column, this.Row);
+        Offset = CalculateOffset(this.place);
 
         if (parent.PlayerColor == null)
             Building = null;
@@ -61,22 +60,22 @@ public class Crossroads : SerializableCross
     }
 
     /// <summary>
-    /// Sets the left Roads to their relevant place and Creates new Roads to the right
+    /// Sets the left Roads to their relevant place and Creates new Roads to the right.
     /// </summary>
     /// <param name="leftDown">The road to the left and down of the crossroad</param>
     /// <param name="leftUp">The road to the left and up of the crossroad</param>
     private void SetRoads(Road leftDown, Road leftUp) 
     {
-        if (Column % 2 == 0)
+        if (place.column % 2 == 0)
         {
             Roads[leftRoad][straightRoad] = leftDown;
 
-            if (SerializableBoard.MainColumn > Column || Row > 0)
+            if (SerializableBoard.MainColumn > place.column || place.row > 0)
                 Roads[rightRoad][downRoad] = new Road(this, RoadType.DownToRightRoad); //right down
             else
                 Roads[rightRoad][downRoad] = null;
 
-            if (SerializableBoard.MainColumn > Column || (Column - SerializableBoard.MainColumn) / 2 + Row < SerializableBoard.MainColumn)
+            if (SerializableBoard.MainColumn > place.column || (place.column - SerializableBoard.MainColumn) / 2 + place.row < SerializableBoard.MainColumn)
                 Roads[rightRoad][upRoad] = new Road(this, RoadType.UpToRightRoad); //right up
             else
                 Roads[rightRoad][upRoad] = null;
@@ -87,7 +86,7 @@ public class Crossroads : SerializableCross
 
             Roads[leftRoad][upRoad] = leftUp;
 
-            if (Column < SerializableBoard.MainColumn * 2 + 1)
+            if (place.column < SerializableBoard.MainColumn * 2 + 1)
                 Roads[rightRoad][straightRoad] = new Road(this, RoadType.StraightRoad); //straight right
             else
                 Roads[rightRoad][straightRoad] = null;
@@ -101,20 +100,19 @@ public class Crossroads : SerializableCross
     }
 
     /// <summary>
-    /// Calculates a crossroad Offset based on Column and Row.
+    /// Calculates a crossroad Offset based on its place.
     /// </summary>
-    /// <param name="Column">The crossroad's Column</param>
-    /// <param name="Row">The crossroad's Row</param>
-    /// <returns>The crossroad's Offset to add</returns>
-    private static Vector3 CalculateOffset(int Column, int Row) 
+    /// <param name="place">The crossroad's place</param>
+    /// <returns>The crossroad's offset</returns>
+    private static Vector3 CalculateOffset(Place place) 
     {
-        float x = (Column - SerializableBoard.MainColumn) / 2;
-        float z = Mathf.Abs(SerializableBoard.MainColumn - Column) / 4f + Row;
-        if (Column % 2 == 0)
+        float x = (place.column - SerializableBoard.MainColumn) / 2;
+        float z = Mathf.Abs(SerializableBoard.MainColumn - place.column) / 4f + place.row;
+        if (place.column % 2 == 0)
         {
             x -= 1f / 3f;
             z += 1f / 4f;
-            if (Column > SerializableBoard.MainColumn)
+            if (place.column > SerializableBoard.MainColumn)
             {
                 x++;
                 z -= 1f / 2f;
@@ -124,9 +122,8 @@ public class Crossroads : SerializableCross
     }
 
     /// <summary>
-    /// Visalizes a theoretical village for the player to choose from when placing
+    /// Visalizes a theoretical village for the player to choose from when placing.
     /// </summary>
-    /// <param name="transpareny">the tranparency precentage of the visual</param>
     /// <param name="color">the color to visualize the village</param>
     /// <returns>the visual's game object</returns>
     public GameObject Visualize(PlayerColor color)
@@ -145,9 +142,9 @@ public class Crossroads : SerializableCross
     }
 
     /// <summary>
-    /// Places a village on the crossroad
+    /// Places a village on the crossroad.
     /// </summary>
-    /// <param name="color">color name of the village (Red, Blue, White, Yellow)</param>
+    /// <param name="color">color name of the village</param>
     public override void BuildVillage(PlayerColor color)
     {
         base.BuildVillage(color);
@@ -157,7 +154,7 @@ public class Crossroads : SerializableCross
     }
 
     /// <summary>
-    /// Upgrade existing village to a city
+    /// Upgrade existing village to a city.
     /// </summary>
     public override void UpgradeToCity() 
     {

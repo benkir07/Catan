@@ -22,31 +22,34 @@ public class Road : SerializableRoad
     private RoadType Type { get; }
 
     /// <summary>
-    /// Creates a Building and calculates its placement
+    /// Creates a road and calculates its placement.
     /// </summary>
-    /// <param name="cross1"></param>
-    /// <param name="Type"></param>
+    /// <param name="cross1">The road's left crossroad</param>
+    /// <param name="Type">The road's rotation</param>
     public Road(Crossroads cross1, RoadType Type) : base(cross1)
     {
         this.Type = Type;
     }
 
     /// <summary>
-    /// Gets the other side of the Building
+    /// Gets the other side of the road.
     /// </summary>
-    /// <param name="c">The current crossroad</param>
+    /// <param name="c">One side of the road</param>
     /// <returns>The other crossroad</returns>
     public Crossroads GetOtherCross(Crossroads c)
     {
         if (c == LeftCross)
             return RightCross;
-        return LeftCross;
+        else if (c == RightCross)
+            return LeftCross;
+        else
+            throw new System.Exception("Could not get other cross of a cross that is not of the road.");
     }
 
     /// <summary>
-    /// Sets the Building's second crossroad and calculates the Building's offset based on that
+    /// Sets the Building's second crossroad and calculates the Building's offset based on that.
     /// </summary>
-    /// <param name="value">The second crossroad</param>
+    /// <param name="value">The road's right crossroad</param>
     public void SetSecondCross(Crossroads value)
     {
         base.SetSecondCross(value);
@@ -54,10 +57,9 @@ public class Road : SerializableRoad
     }
 
     /// <summary>
-    /// Visalizes a theoretical Building for the player to choose from when placing
+    /// Visalizes a theoretical road for the player to choose from when placing.
     /// </summary>
-    /// <param name="transpareny">the tranparency precentage of the visual</param>
-    /// <param name="color">the color to visualize the Building</param>
+    /// <param name="color">the color to visualize the road</param>
     /// <returns>the visual's game object</returns>
     public GameObject Visualize(PlayerColor color)
     {
@@ -75,24 +77,15 @@ public class Road : SerializableRoad
     }
 
     /// <summary>
-    /// Places a Building object in this Building's place
+    /// Places a road object in this road's place.
     /// </summary>
-    /// <param name="color">color name of the Building (Red, Blue, White, Yellow)</param>
+    /// <param name="color">color name of the road</param>
     public override void Build(PlayerColor color)
     {
         base.Build(color);
         Building = GameObject.Instantiate(Prefabs.Roads[Type.ToString()], Object.FindObjectOfType<Player>().transform);
         Building.transform.position += offset;
         Building.GetComponentInChildren<Renderer>().material = Prefabs.Colors[color];
-    }
-
-    /// <summary>
-    /// Description of the object
-    /// </summary>
-    /// <returns></returns>
-    public override string ToString()
-    {
-        return base.ToString() + " of Type: " + Type;
     }
 }
 

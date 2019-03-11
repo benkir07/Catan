@@ -4,12 +4,14 @@ using System.Collections.Generic;
 using UnityEngine.UI;
 using TMPro;
 
-public partial class Player : MonoBehaviour
+public class Player : MonoBehaviour
 {
     private NetworkManager network;
     private MyHandManager cardsInHand;
     private HandManager[] otherHands;
     private DiceThrower dice;
+
+    private PlayerInfo[] infos;
 
     private PlayerColor color;
     private Board Board;
@@ -18,15 +20,16 @@ public partial class Player : MonoBehaviour
         StartVisualized,
         StartSelected,
         RobberVisualized,
-        RobberSelected
+        RobberSelected,
+        MainPhase
     }
     private State? state = null;
     public GameObject canvas;
     public TextMeshProUGUI OnScreenText;
-    public Transform colorsPanel;
 
     /// <summary>
-    /// Runs as the game starts
+    /// Runs as the game starts.
+    /// Initializes the player's variables.
     /// </summary>
     private void Start()
     {
@@ -35,28 +38,52 @@ public partial class Player : MonoBehaviour
         cardsInHand = GetComponent<MyHandManager>();
 
         otherHands = new HandManager[3];
-        for (int i = 1; i <= 3; i++)
+        for (int i = 1; i < 4; i++)
         {
             otherHands[i - 1] = GameObject.Find("NextPlayer" + i).GetComponent<HandManager>();
+        }
+
+        infos = new PlayerInfo[4];
+        for (int i = 0; i < 4; i++)
+        {
+            infos[i] = GameObject.Find("Canvas/Game/PlayersInfo/NextPlayer" + i).GetComponent<PlayerInfo>();
         }
 
         dice.enabled = true;
         cardsInHand.enabled = true;
 
-        color = (PlayerColor)Enum.Parse(typeof(PlayerColor), network.ReadLine());
-
-        Board = new Board(network.Deserialize<SerializableBoard>());
-
         canvas = GameObject.Find("Canvas/Game");
         OnScreenText = canvas.transform.Find("Message").GetComponent<TextMeshProUGUI>();
-        colorsPanel = canvas.transform.Find("Colors");
 
         canvas.transform.Find("Turns").gameObject.SetActive(true);
+        canvas.transform.Find("PlayersInfo").gameObject.SetActive(true);
+        canvas.transform.Find("PlayersInfo/ShowStats").GetComponent<ShowStats>().LoadInfos();
+
+        color = (PlayerColor)Enum.Parse(typeof(PlayerColor), network.ReadLine());
+        int playerAmount = int.Parse(network.ReadLine());
+
+        // Sets each info's color label to its relevant value, depending on our color.
+        // Disables not needed infos.
+        foreach (PlayerColor color in Enum.GetValues(typeof(PlayerColor)))
+        {
+            if ((int)color < playerAmount) // Checks if the player color is playing
+            {
+                TextMeshProUGUI colorText = GetInfoObj(color).GetInfo(PlayerInfo.Info.Color);
+                colorText.SetText(color.ToString());
+                colorText.color = Prefabs.Colors[color].color;
+            }
+            else // Disables the showing of not needed info objects.
+            {
+                ShowStats.instance.PlayerInfos.Remove(GetInfoObj(color).gameObject);
+            }
+        }
+
+        Board = new Board(network.Deserialize<SerializableBoard>());
     }
 
     /// <summary>
-    /// Runs every tick
-    /// Responsible for all commands during the game
+    /// Runs every tick.
+    /// Responsible for all commands during the game.
     /// </summary>
     private void Update()
     {
@@ -83,6 +110,7 @@ public partial class Player : MonoBehaviour
                         vx.SetActive(true);
                         vx.transform.Find("X").gameObject.SetActive(false);
                         vx.transform.Find("V").gameObject.GetComponent<Button>().onClick.AddListener(ConfirmPlace);
+                        OnScreenText.SetText("Are you sure you want to place there?\nChoose a new place to change the position");
                         state = State.StartSelected;
                     }
                     break;
@@ -96,6 +124,7 @@ public partial class Player : MonoBehaviour
                         vx.SetActive(true);
                         vx.transform.Find("X").gameObject.SetActive(false);
                         vx.transform.Find("V").gameObject.GetComponent<Button>().onClick.AddListener(ConfirmPlace);
+                        OnScreenText.SetText("Are you sure you want to place there?\nChoose a new place to change the position");
                         state = State.RobberSelected;
                     }
                     break;
@@ -108,7 +137,7 @@ public partial class Player : MonoBehaviour
     }
 
     /// <summary>
-    /// Handles a message got from the server
+    /// Handles a message got from the server.
     /// </summary>
     /// <param name="message">The message to handle</param>
     private void HandleMessage(Message message)
@@ -124,19 +153,15 @@ public partial class Player : MonoBehaviour
             case Message.NewTurn:
                 {
                     PlayerColor playerColor = (PlayerColor)Enum.Parse(typeof(PlayerColor), network.ReadLine());
-                    string text = playerColor.ToString() + " Player's Turn";
-                    if (playerColor == this.color)
-                        text += "\n(You)";
-                    TMPro.TextMeshProUGUI turnsText = canvas.transform.Find("Turns").gameObject.GetComponent<TMPro.TextMeshProUGUI>();
-                    turnsText.SetText(text);
-                    turnsText.faceColor = Prefabs.Colors[playerColor].color;
-                    
+                    canvas.transform.Find("Turns").gameObject.GetComponent<TextMeshProUGUI>().SetText(playerColor.ToString() + " Player's Turn");
+                    canvas.transform.Find("Turns/Image").gameObject.GetComponent<Image>().color = Prefabs.Colors[playerColor].color;
                     break;
                 }
             case Message.StartPlace:
                 {
-                    List<(int, int)> places = network.Deserialize<List<(int, int)>>();
+                    List<Place> places = network.Deserialize<List<Place>>();
                     VisualizeVillages(places);
+                    OnScreenText.SetText("Choose a place to build your starting village");
                     state = State.StartVisualized;
                     break;
                 }
@@ -146,16 +171,21 @@ public partial class Player : MonoBehaviour
                     PlayerColor color = (PlayerColor)Enum.Parse(typeof(PlayerColor), network.ReadLine());
                     int col = int.Parse(network.ReadLine());
                     int row = int.Parse(network.ReadLine());
-                    Crossroads crossroad = Board.Crossroads[(col, row)];
+                    Crossroads crossroad = Board.Crossroads[new Place(col, row)];
                     if (message == Message.BuildVillage)
                     {
+                        int victoryPoints = int.Parse(network.ReadLine());
+
                         crossroad.BuildVillage(color);
+
+                        GetInfoObj(color).GetInfo(PlayerInfo.Info.VictoryPoints).SetText(victoryPoints.ToString());
 
                         if (state == State.StartSelected)
                         {
                             GameObject visuals = new GameObject("Visuals Parent");
                             visuals.transform.parent = transform;
                             VisualizeRoads(crossroad, visuals);
+                            OnScreenText.SetText("Choose a direction to start off your road");
                             state = State.StartVisualized;
                         }
                     }
@@ -178,30 +208,22 @@ public partial class Player : MonoBehaviour
                     int row = int.Parse(network.ReadLine());
                     Resource resource = (Resource)Enum.Parse(typeof(Resource), network.ReadLine());
 
-                    GetHand(player).AddAnimation(resource, Board.Tiles[(col, row)].GameObject.transform.position);
+                    GetHand(player).AddAnimation(resource, Board.Tiles[new Place(col, row)].GameObject.transform.position);
+
+                    int cardsInHand = GetHand(player).CardAmount + GetHand(player).AnimatedCards;
+                    GetInfoObj(player).GetInfo(PlayerInfo.Info.CardAmount).SetText(cardsInHand.ToString());
                     break;
                 }
             case Message.Discard:
                 {
                     PlayerColor player = (PlayerColor)Enum.Parse(typeof(PlayerColor), network.ReadLine());
                     Resource resource = (Resource)Enum.Parse(typeof(Resource), network.ReadLine());
-                    DiscardWays way = (DiscardWays)Enum.Parse(typeof(DiscardWays), network.ReadLine());
-                    Vector3 payTo = Vector3.zero;
-                    switch (way)
-                    {
-                        case DiscardWays.Robber:
-                            payTo = Board.Robber.transform.position;
-                            if (player == this.color && GetComponent<MyHandManager>().CardsToDiscard == 0)
-                                OnScreenText.SetText("Waiting for other players to discard half the cards in their hand");
-                            break;
-                        case DiscardWays.Build:
-                            break;
-                        case DiscardWays.Pay:
-                            break;
-                        default:
-                            break;
-                    }
-                    GetHand(player).DiscardAnimation(resource, payTo);
+                    if (player == this.color && GetComponent<MyHandManager>().CardsToDiscard == 0)
+                        OnScreenText.SetText("Waiting for other players to discard half the cards in their hand");
+
+                    GetHand(player).DiscardAnimation(resource, Board.Robber.transform.position);
+
+                    GetInfoObj(player).GetInfo(PlayerInfo.Info.CardAmount).SetText(GetHand(player).CardAmount.ToString());
                     break;
                 }
             case Message.Steal:
@@ -212,7 +234,11 @@ public partial class Player : MonoBehaviour
 
                     HandManager victimHand = GetHand(victim);
                     victimHand.Discard(resource);
+                    GetInfoObj(victim).GetInfo(PlayerInfo.Info.CardAmount).SetText(GetHand(victim).CardAmount.ToString());
+
                     GetHand(thief).AddAnimation(resource, victimHand.transform.position + victimHand.HandPos);
+                    int cardsInHand = GetHand(thief).CardAmount + GetHand(thief).AnimatedCards;
+                    GetInfoObj(thief).GetInfo(PlayerInfo.Info.CardAmount).SetText(cardsInHand.ToString());
                     break;
                 }
             case Message.PromptDiceRoll:
@@ -237,15 +263,15 @@ public partial class Player : MonoBehaviour
                     PlayerColor player = (PlayerColor)Enum.Parse(typeof(PlayerColor), network.ReadLine());
                     if (player == this.color)
                     {
-                        List<(int, int)> tilesCanMoveTo = network.Deserialize<List<(int, int)>>();
-                        foreach ((int, int) place in tilesCanMoveTo)
+                        List<Place> tilesCanMoveTo = network.Deserialize<List<Place>>();
+                        foreach (Place place in tilesCanMoveTo)
                         {
                             GameObject arrow = Instantiate(Prefabs.Arrow, Board.Tiles[place].GameObject.transform);
                             arrow.transform.position += new Vector3(0, 3, 0);
-                            arrow.name = place.Item1 + " " + place.Item2;
+                            arrow.name = place.column + " " + place.row;
                             arrow.tag = "Arrow";
                         }
-                        OnScreenText.SetText("Choose a new place for the robber");
+                        OnScreenText.SetText("Click on an arrow to choose a new place for the robber");
                         state = State.RobberVisualized;
                     }
                     else
@@ -256,12 +282,12 @@ public partial class Player : MonoBehaviour
                 }
             case Message.RobberTo:
                 {
-                    string sCol = network.ReadLine(), sRow = network.ReadLine();
+                    string col = network.ReadLine(), row = network.ReadLine();
                     if (state == State.RobberSelected)
                         state = null;
                     else
                         Destroy(Board.Robber);
-                    Board.CreateParentedRobber((int.Parse(sCol), int.Parse(sRow)));
+                    Board.CreateParentedRobber(new Place(int.Parse(col), int.Parse(row)));
                     OnScreenText.SetText("");
                     break;
                 }
@@ -275,8 +301,9 @@ public partial class Player : MonoBehaviour
             case Message.ChooseSteal:
                 {
                     string playersCanStealFrom = network.ReadLine();
-                    
-                    colorsPanel.Find("Panel").gameObject.SetActive(true);
+
+                    Transform colorsPanel = canvas.transform.Find("Colors");
+
                     foreach (string player in playersCanStealFrom.Split(' '))
                     {
                         PlayerColor color = (PlayerColor)Enum.Parse(typeof(PlayerColor), player);
@@ -292,10 +319,20 @@ public partial class Player : MonoBehaviour
                                 colorButton.gameObject.SetActive(false);
                             }
                             OnScreenText.SetText("");
-                            colorsPanel.Find("Panel").gameObject.SetActive(false);
                         });
                     }
                     OnScreenText.SetText("Choose a player to steal from");
+                    break;
+                }
+            case Message.MainPhase:
+                {
+                    GameObject button = canvas.transform.Find("End Button").gameObject;
+                    button.SetActive(true);
+                    Button buttonComp = button.GetComponent<Button>();
+                    buttonComp.onClick.AddListener(delegate { button.SetActive(false); });
+                    buttonComp.onClick.AddListener(delegate { network.WriteLine(Message.EndTurn.ToString()); });
+                    buttonComp.onClick.AddListener(buttonComp.onClick.RemoveAllListeners);
+                    state = State.MainPhase;
                     break;
                 }
         }
@@ -304,15 +341,15 @@ public partial class Player : MonoBehaviour
     /// <summary>
     /// Visualizes villages with this player's color in every place in the places input list.
     /// </summary>
-    /// <param name="places">List of two elements arrays including column and row values for the crossroads that should be visualized</param>
-    private void VisualizeVillages(List<(int, int)> places)
+    /// <param name="places">List of the places of the crossroads that should be visualized</param>
+    private void VisualizeVillages(List<Place> places)
     {
         GameObject visuals = new GameObject("Visuals Parent");
         visuals.transform.parent = transform;
-        foreach ((int col, int row) in places)
+        foreach (Place place in places)
         {
-            GameObject visual = Board.Crossroads[(col, row)].Visualize((PlayerColor)this.color);
-            visual.name = col + " " + row;
+            GameObject visual = Board.Crossroads[place].Visualize((PlayerColor)this.color);
+            visual.name = place.column + " " + place.row;
             visual.transform.parent = visuals.transform;
             visual.transform.GetChild(0).gameObject.AddComponent(typeof(CapsuleCollider));
             visual.tag = "Visual";
@@ -322,7 +359,7 @@ public partial class Player : MonoBehaviour
     /// <summary>
     /// Visualizes roads able to be built
     /// </summary>
-    /// <param name="crossroads">The crossroad to surround with (up to 3) visual roads</param>
+    /// <param name="crossroads">The crossroad to surround with visual roads</param>
     /// <param name="visualsParent">The visual parent</param>
     private void VisualizeRoads(Crossroads crossroad, GameObject visualsParent)
     {
@@ -330,10 +367,10 @@ public partial class Player : MonoBehaviour
         {
             for (int upDown = 0; upDown < 2; upDown++)
             {
-                if (crossroad.Roads[rightLeft][upDown] != null)
+                if (crossroad.Roads[rightLeft][upDown] != null && crossroad.Roads[rightLeft][upDown].PlayerColor == null)
                 {
                     GameObject visual = crossroad.Roads[rightLeft][upDown].Visualize((PlayerColor)this.color);
-                    visual.name = crossroad.Column + " " + crossroad.Row + "," + rightLeft + " " + upDown;
+                    visual.name = crossroad.place.column + " " + crossroad.place.row + "," + rightLeft + " " + upDown;
                     visual.transform.parent = visualsParent.transform;
                     visual.transform.GetChild(0).gameObject.AddComponent(typeof(BoxCollider));
                     visual.tag = "Visual";
@@ -343,8 +380,8 @@ public partial class Player : MonoBehaviour
     }
 
     /// <summary>
-    /// Checks if the player clicked on a visual (Village, City or Road), and marks it as "Selected"
-    /// Unmarks the previously "Selected" object
+    /// Checks if the player clicked on a visual building and marks it as "Selected".
+    /// Unmarks the previously "Selected" object.
     /// </summary>
     /// <returns>returns true if a visual was clicked, and false otherwise</returns>
     private bool SelectVisual()
@@ -374,8 +411,8 @@ public partial class Player : MonoBehaviour
     }
 
     /// <summary>
-    /// Checks if the player clicked on an arrow, marks it as "Selected" and parents the robber to it
-    /// Unmarks the previously "Selected" arrow
+    /// Checks if the player clicked on an arrow, marks it as "Selected" and parents the robber to it.
+    /// Unmarks the previously "Selected" arrow.
     /// </summary>
     /// <returns>returns true if an arrow was clicked, and false otherwise</returns>
     private bool SelectRobberPlace()
@@ -411,7 +448,7 @@ public partial class Player : MonoBehaviour
     }
 
     /// <summary>
-    /// Confirms that the visual tagged "Selected" is the visual the player wants to place
+    /// Confirms that the visual tagged "Selected" is the visual the player wants to place.
     /// </summary>
     public void ConfirmPlace()
     {
@@ -433,10 +470,11 @@ public partial class Player : MonoBehaviour
             vx.transform.Find("X").gameObject.SetActive(true);
         }
         vx.SetActive(false);
+        OnScreenText.SetText("");
     }
 
     /// <summary>
-    /// Gets the hand manager for a specific player by color
+    /// Gets the hand manager for a specific player by color.
     /// </summary>
     /// <param name="player">The player's color</param>
     /// <returns>The player's hand manager</returns>
@@ -451,5 +489,13 @@ public partial class Player : MonoBehaviour
                 handIndex += otherHands.Length + 1;
             return otherHands[handIndex];
         }
+    }
+
+    private PlayerInfo GetInfoObj(PlayerColor player)
+    {
+        int index = (int)player - (int)this.color;
+        if (index < 0)
+            index += infos.Length;
+        return infos[index];
     }
 }

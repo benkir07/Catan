@@ -22,7 +22,7 @@ public static class Prefabs
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     /// <summary>
-    /// loads the needed prefabs into the prefabs lists
+    /// loads the needed prefabs into the prefabs' variables.
     /// </summary>
     public static void LoadPrefabs()
     {
@@ -43,12 +43,6 @@ public static class Prefabs
         foreach (Object tile in Resources.LoadAll("Tiles", typeof(GameObject)))
         {
             Tiles[tile.name] = (GameObject)tile;
-        }
-
-        //Ports prebfabs
-        foreach (Object port in Resources.LoadAll("Ports", typeof(GameObject)))
-        {
-            Port.portsPrefabs[port.name] = (GameObject)port;
         }
 
         //Buildings prefabs

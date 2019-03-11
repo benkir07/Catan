@@ -6,12 +6,12 @@ public class Board
     public const float xOffset = 3.55f;
     public const float zOffset = 4.1f;
 
-    public Dictionary<(int, int), Tile> Tiles { get; } = new Dictionary<(int, int), Tile>();
-    public Dictionary<(int, int), Crossroads> Crossroads { get; } = new Dictionary<(int, int), Crossroads>();
+    public Dictionary<Place, Tile> Tiles { get; } = new Dictionary<Place, Tile>();
+    public Dictionary<Place, Crossroads> Crossroads { get; } = new Dictionary<Place, Crossroads>();
     public GameObject Robber;
 
     /// <summary>
-    /// Places a board based on a given theoretical board and keeps refrences to the parts
+    /// Places a board based on a given theoretical board and keeps refrences to the parts.
     /// </summary>
     /// <param name="board">Board to place</param>
     public Board(SerializableBoard board)
@@ -22,10 +22,10 @@ public class Board
     }
 
     /// <summary>
-    /// Helper function that places the given Tiles
+    /// Helper function that places the given Tiles.
     /// </summary>
-    /// <param name="board">Board to place</param>
-    void SetUpTiles(string[][][] tiles)
+    /// <param name="tiles">Tiles to place</param>
+    private void SetUpTiles(string[][][] tiles)
     {
         for (int col = 0; col < tiles.Length; col++)
         {
@@ -35,7 +35,7 @@ public class Board
                 if (type == "Desert" || type == "Water")
                 {
                     TileTypes _type = (TileTypes)System.Enum.Parse(typeof(TileTypes), type);
-                    Tiles[(col,row)] = new Tile(_type, col, row);
+                    Tiles[new Place(col, row)] = new Tile(_type, col, row);
                 }
 
                 else if (type == "Port")
@@ -47,23 +47,24 @@ public class Board
                     else
                         _resource = (Resource)System.Enum.Parse(typeof(Resource), resource);
                     int angel = int.Parse(tiles[col][row][SerializableBoard.PortAngel]);
-                    Tiles[(col, row)] = new Port(_resource, angel, col, row);
+                    Tiles[new Place(col, row)] = new Port(_resource, angel, col, row);
                 }
 
                 else if (type == "Resource")
                 {
                     string resource = tiles[col][row][SerializableBoard.ResourceType];
                     string num = tiles[col][row][SerializableBoard.TileNum];
-                    Tiles[(col, row)] = new ResourceTile(resource, num, col, row);
+                    Tiles[new Place(col, row)] = new ResourceTile(resource, num, col, row);
                 }
             }
         }
     }
 
     /// <summary>
-    /// Helper function that creates all Crossroads
+    /// Helper function that creates all Crossroads.
     /// </summary>
-    void SetUpCrossroads(SerializableCross[][] Crossroads)
+    /// <param name="Crossroads">Crossroads to place</param>
+    private void SetUpCrossroads(SerializableCross[][] Crossroads)
     {
         for (int col = 0; col < Crossroads.Length; col++)
         {
@@ -75,7 +76,7 @@ public class Board
                 {
                     if (col % 2 == 0)
                     {
-                        leftDown = this.Crossroads[(col - 1, row)].Roads[SerializableCross.rightRoad][SerializableCross.straightRoad];
+                        leftDown = this.Crossroads[new Place(col - 1, row)].Roads[SerializableCross.rightRoad][SerializableCross.straightRoad];
                     }
                     else
                     {
@@ -84,25 +85,25 @@ public class Board
                             row++;
 
                         if (row > 0 && row <= Crossroads[col - 1].Length)
-                            leftDown = this.Crossroads[(col - 1, row - 1)].Roads[SerializableCross.rightRoad][SerializableCross.upRoad];
+                            leftDown = this.Crossroads[new Place(col - 1, row - 1)].Roads[SerializableCross.rightRoad][SerializableCross.upRoad];
                         if (row < Crossroads[col - 1].Length)
-                            leftUp = this.Crossroads[(col - 1, row)].Roads[SerializableCross.rightRoad][SerializableCross.downRoad];
+                            leftUp = this.Crossroads[new Place(col - 1, row)].Roads[SerializableCross.rightRoad][SerializableCross.downRoad];
 
                         if (offset)
                             row--;
                     }
                 }
                 SerializableCross parent = Crossroads[col][row];
-                this.Crossroads[(col, row)] = new Crossroads(parent, leftDown, leftUp);
+                this.Crossroads[new Place(col, row)] = new Crossroads(parent, leftDown, leftUp);
             }
         }
     }
 
     /// <summary>
-    /// Parents a the robber to the tile at a place
+    /// Parents a the robber to the tile at a place.
     /// </summary>
     /// <param name="place">The place of the tile</param>
-    public void CreateParentedRobber((int, int) place)
+    public void CreateParentedRobber(Place place)
     {
         Robber = GameObject.Instantiate(Prefabs.Robber, Tiles[place].GameObject.transform);
         Robber.transform.eulerAngles = new Vector3(0, 180, 0);

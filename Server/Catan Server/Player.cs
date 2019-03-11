@@ -11,25 +11,24 @@ namespace Catan_Server
         private static XmlSerializer Serializer { get; } = new XmlSerializer(typeof(List<int[]>));
 
         public TcpClient Socket { get; }
-        public int CharsToRead
-        {
-            get
-            {
-                return Socket.Available;
-            }
-        }
         public EndPoint IPPort { get; }
-        public PlayerColor PlayerColor { get; }
-        public List<Resource> resources = new List<Resource>();
         private StreamReader ReadFrom { get; }
         private StreamWriter WriteTo { get; }
+
+        public PlayerColor PlayerColor { get; }
+        public List<Resource> resources = new List<Resource>();
+        public int VillagesLeft = 5;
+        public int CitiesLeft = 4;
+        public int RoadsLeft = 15;
+        public int VictoryPoints = 0;
+
 
         /// <summary>
         /// Initializes a new Player object representing a player in a game.
         /// </summary>
         /// <param name="socket">The player's socket</param>
         /// <param name="color">The player's color</param>
-        public Player(TcpClient socket, PlayerColor color)
+        public Player(TcpClient socket, PlayerColor color) 
         {
             this.Socket = socket;
             this.IPPort = socket.Client.RemoteEndPoint;
@@ -46,44 +45,56 @@ namespace Catan_Server
         }
 
         /// <summary>
-        /// Reads a message from the player
+        /// Reads a message from the player.
         /// </summary>
         /// <returns>The message the player sent</returns>
-        public string ReadLine()
+        public string ReadLine() 
         {
             string data = ReadFrom.ReadLine();
             return data;
         }
 
         /// <summary>
-        /// Sends a message to the player
+        /// Sends a message to the player.
         /// </summary>
         /// <param name="message">The message to send</param>
-        public void WriteLine(string message)
+        public void WriteLine(string message) 
         {
             WriteTo.WriteLine(message);
             ReadFrom.ReadLine(); //Sign that got the message
         }
 
         /// <summary>
-        /// Serializes (in Xml format) and sends an object to the player
+        /// Serializes (in Xml format) and sends an object to the player.
         /// </summary>
         /// <param name="toSend">The object to send</param>
-        public void Send(object toSend)
+        public void Send(object toSend) 
         {
             StringWriter xml = new StringWriter();
             XmlSerializer serializer = new XmlSerializer(toSend.GetType());
             serializer.Serialize(xml, toSend);
             WriteLine(xml.ToString().Length.ToString());
 
-            WriteTo.WriteLine(xml.ToString());
+            WriteTo.Write(xml.ToString());
             ReadFrom.ReadLine(); //Sign that got the message
+        }
+
+        /// <summary>
+        /// Removes a random resource from the player's hand.
+        /// </summary>
+        /// <returns>The resource that was removed</returns>
+        public Resource TakeRandomResource() 
+        {
+            int index = Game.random.Next(0, resources.Count);
+            Resource taking = resources[index];
+            resources.RemoveAt(index);
+            return taking;
         }
 
         /// <summary>
         /// Closes the player's socket
         /// </summary>
-        public void Close()
+        public void Close() 
         {
             try
             {
@@ -98,18 +109,6 @@ namespace Catan_Server
                 Server.Gui.EnterLog(IPPort + " Disconnected");
                 Socket.Close();
             }
-        }
-
-        /// <summary>
-        /// Removes a random resource from the player's hand
-        /// </summary>
-        /// <returns>The resource that was removed</returns>
-        public Resource TakeRandomResource()
-        {
-            int index = Game.random.Next(0, resources.Count);
-            Resource taking = resources[index];
-            resources.RemoveAt(index);
-            return taking;
         }
     }
 }

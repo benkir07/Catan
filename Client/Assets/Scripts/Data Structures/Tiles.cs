@@ -11,27 +11,7 @@ public class Tile
     protected int Row { get; }
 
     /// <summary>
-    /// Calculates the offset placing of the tile based on its column and row
-    /// </summary>
-    /// <param name="column">The column to be based on</param>
-    /// <param name="row">The row to be based on</param>
-    /// <returns>Offset to add to the tile</returns>
-    protected static Vector3 CalculateOffset(int column, int row)
-    {
-        float x = column - SerializableBoard.MainColumn / 2 - 1;
-        float z = row + 1f;
-
-        if (column > 1 && column < SerializableBoard.MainColumn)
-            z--;
-
-        if (column % 2 == 0)
-            z += 0.5f; //to align well.
-
-        return new Vector3(x * Board.xOffset, 0, z * Board.zOffset);
-    }
-
-    /// <summary>
-    /// Creates a new tile object and places it in world
+    /// Creates a new tile object and places it in world.
     /// </summary>
     /// <param name="Type">The tile Type</param>
     /// <param name="column">The tile's column</param>
@@ -47,7 +27,7 @@ public class Tile
     }
 
     /// <summary>
-    /// Places the tile in scene
+    /// Places the tile in scene.
     /// </summary>
     /// <param name="modelName">The prefab to use</param>
     protected void Place(string modelName)
@@ -66,12 +46,23 @@ public class Tile
     }
 
     /// <summary>
-    /// Description of the object
+    /// Calculates the offset placing of the tile based on its column and row.
     /// </summary>
-    /// <returns></returns>
-    public override string ToString()
+    /// <param name="column">The column to be based on</param>
+    /// <param name="row">The row to be based on</param>
+    /// <returns>Offset to add to the tile's prefab</returns>
+    protected static Vector3 CalculateOffset(int column, int row)
     {
-        return Type.ToString();
+        float x = column - SerializableBoard.MainColumn / 2 - 1;
+        float z = row + 1f;
+
+        if (column > 1 && column < SerializableBoard.MainColumn)
+            z--;
+
+        if (column % 2 == 0)
+            z += 0.5f; //to align well.
+
+        return new Vector3(x * Board.xOffset, 0, z * Board.zOffset);
     }
 }
 
@@ -81,12 +72,12 @@ public class ResourceTile : Tile
     private Resource Producing { get; }
 
     /// <summary>
-    /// Creates a new resource producing tile object and places it in world
+    /// Creates a new resource producing tile object and places it in world.
     /// </summary>
-    /// <param name="Type"></param>
+    /// <param name="Type">The tile Type</param>
     /// <param name="numToken">The number on the tile</param>
-    /// <param name="column"></param>
-    /// <param name="row"></param>
+    /// <param name="column">The tile's column</param>
+    /// <param name="row">The tile's row</param>
     public ResourceTile(string Type, string numToken, int column, int row) : base(TileTypes.Resource, column, row)
     {
         Producing = (Resource)Enum.Parse(typeof(Resource), Type);
@@ -108,25 +99,14 @@ public class ResourceTile : Tile
         }
         text.SetText(numToken);
     }
-
-    /// <summary>
-    /// Description of the object
-    /// </summary>
-    /// <returns></returns>
-    public override string ToString()
-    {
-        return Producing + " " + Num;
-    }
 }
 
 public class Port : Tile
 {
-    public static Dictionary<string, GameObject> portsPrefabs = new Dictionary<string, GameObject>();
-
     private Resource? Product { get; }
 
     /// <summary>
-    /// Creates a new port tile object and places it in world
+    /// Creates a new port tile object and places it in world.
     /// </summary>
     /// <param name="resource">The resource the port is trading, or null if its a generic port</param>
     /// <param name="angel">The angel of turning of the port model</param>
@@ -142,14 +122,5 @@ public class Port : Tile
             Place(Product.ToString() + "Port");
 
         GameObject.transform.eulerAngles = new Vector3(0, angel, 0);
-    }
-
-    /// <summary>
-    /// Description of the object
-    /// </summary>
-    /// <returns></returns>
-    public override string ToString()
-    {
-        return Product.ToString() + " Port";
     }
 }

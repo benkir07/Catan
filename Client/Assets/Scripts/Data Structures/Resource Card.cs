@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
-class ResourceCard
+public class ResourceCard
 {
     private const int angel = 7;
     private const float xOffset = 0.8f;
@@ -78,7 +78,7 @@ class ResourceCard
     }
 
     /// <summary>
-    /// Creates a new array of the same cards in the same order, but with only resources
+    /// Creates a new array of the same cards in the same order, but with only resources.
     /// </summary>
     /// <param name="cards">The cards to simplify</param>
     /// <returns>Array of resources of the cards in hand</returns>

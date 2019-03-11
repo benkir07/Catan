@@ -4,18 +4,25 @@ using UnityEngine;
 
 public class Float : MonoBehaviour
 {
-    public float divOffset = 1f;
+    public const float divOffset = 0.3f;
 
-    float StartY;
+    private float StartY;
 
-    void Start()
+    /// <summary>
+    /// Runs at the activation of the behavior, keeping the object's starting y value.
+    /// </summary>
+    private void Start()
     {
         StartY = transform.position.y;
     }
 
-    void Update()
+    /// <summary>
+    /// Runs every tick.
+    /// Changes the object's y value by sin of the time since start of the game.
+    /// </summary>
+    private void Update()
     {
-        transform.position = new Vector3(transform.position.x, StartY + Mathf.Sin(Time.fixedTime) / divOffset, transform.position.z);
+        transform.position = new Vector3(transform.position.x, StartY + Mathf.Sin(Time.fixedTime) * divOffset, transform.position.z);
         transform.Rotate(new Vector3(0, 3, 0), Space.Self);
     }
 }

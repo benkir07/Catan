@@ -43,7 +43,7 @@ public class ResourceCard
         for (int i = 0; i < cardsInHand.Count; i++)
         {
             currHand[i] = new ResourceCard(cardsInHand[i], parent, new Vector3(curXOffset, curYOffset), new Vector3(0, 0, angelOffset));
-            currHand[i].GameObject.GetComponent<SpriteRenderer>().sortingOrder = i;
+            currHand[i].GameObject.GetComponent<SpriteRenderer>().sortingOrder = i - cardsInHand.Count;
 
             angelOffset += angel;
             curXOffset -= xOffset;

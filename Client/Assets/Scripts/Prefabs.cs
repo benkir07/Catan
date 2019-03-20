@@ -6,6 +6,7 @@ using UnityEditor;
 public static class Prefabs
 {
     public static Dictionary<PlayerColor, Material> Colors { get; } = new Dictionary<PlayerColor, Material>();
+    public static Dictionary<PlayerColor, Material> UIColors { get; } = new Dictionary<PlayerColor, Material>();
     public static Dictionary<PlayerColor, Material> Tranparents { get; } = new Dictionary<PlayerColor, Material>();
 
     public static Dictionary<string, GameObject> Tiles { get; } = new Dictionary<string, GameObject>();
@@ -28,10 +29,15 @@ public static class Prefabs
     {
         TextInfo myTI = new CultureInfo("en-US", false).TextInfo;
 
-        //PlayerColor Prebfabs
+        //Color Prebfabs
         foreach (Object material in Resources.LoadAll("Materials/Colors", typeof(Material)))
         {
             Colors[(PlayerColor)System.Enum.Parse(typeof(PlayerColor), myTI.ToTitleCase(material.name.ToLower()))] = (Material)material;
+        }
+        //UI Colors
+        foreach (Object material in Resources.LoadAll("Materials/UI Colors", typeof(Material)))
+        {
+            UIColors[(PlayerColor)System.Enum.Parse(typeof(PlayerColor), myTI.ToTitleCase(material.name.ToLower()))] = (Material)material;
         }
         //Transparents
         foreach (Object material in Resources.LoadAll("Materials/Transparent", typeof(Material)))

@@ -21,6 +21,14 @@ namespace Catan_Server
         private Player[] players;
         private SerializableBoard Board;
 
+        private static Dictionary<string, Resource[]> costs = new Dictionary<string, Resource[]>()
+        {
+            {"Road" , new Resource[] {Resource.Brick, Resource.Wood} },
+            {"Village", new Resource[] {Resource.Brick, Resource.Wood, Resource.Sheep, Resource.Wheat} },
+            {"City", new Resource[] {Resource.Wheat, Resource.Wheat, Resource.Ore, Resource.Ore, Resource.Ore} },
+            {"Development Card", new Resource[] {Resource.Ore, Resource.Sheep, Resource.Wheat} }
+        };
+
         /// <summary>
         /// Initializes a game and its relevant properties.
         /// </summary>
@@ -93,11 +101,15 @@ namespace Catan_Server
                     StartPlace(player, true);
                 }
 
-                /* adds wood to the first player for testing
-                for (int i = 0; i < 12; i++)
+                /* adds resources to the first player for testing
+                
+                for (int i = 0; i < 5; i++)
                 {
-                    players[0].resources.Add(Resource.Wood);
-                    Broadcast(Message.AddResource, players[0].PlayerColor.ToString(), "0", "0", Resource.Wood.ToString());
+                    for (int j = 0; j < 3; j++)
+                    {
+                        players[0].resources.Add((Resource)i);
+                        Broadcast(Message.AddResource, players[0].PlayerColor.ToString(), "0", "0", ((Resource)i).ToString());
+                    }
                 }
                 */
 
@@ -142,7 +154,7 @@ namespace Catan_Server
         {
             Broadcast(Message.NewTurn, placer.PlayerColor.ToString());
             placer.WriteLine(Message.StartPlace.ToString());
-            placer.Send(Board.PlacesCanBuildVillage(placer.PlayerColor, needRoadLink: false));
+            placer.Send(Board.PlacesCanBuild(placer.PlayerColor, true, needRoadLink: false));
 
             string msg = placer.ReadLine();
             string[] colRow = msg.Split(' ');
@@ -151,7 +163,7 @@ namespace Catan_Server
             Board.Crossroads[col][row].BuildVillage(placer.PlayerColor);
             placer.VillagesLeft--;
             placer.VictoryPoints++;
-            Broadcast(Message.BuildVillage, placer.PlayerColor.ToString(), col.ToString(), row.ToString(), placer.VictoryPoints.ToString());
+            Broadcast(Message.BuildVillage, placer.PlayerColor.ToString(), col.ToString(), row.ToString(), placer.VictoryPoints.ToString(), 0.ToString());
 
 
             if (AddResource)
@@ -173,7 +185,7 @@ namespace Catan_Server
             string[] directions = crossNRoad[1].Split(' ');
             string rightLeft = directions[0], upDown = directions[1];
             Board.Crossroads[col][row].Roads[int.Parse(rightLeft)][int.Parse(upDown)].Build(placer.PlayerColor);
-            Broadcast(Message.BuildRoad, placer.PlayerColor.ToString(), col.ToString(), row.ToString(), rightLeft, upDown);
+            Broadcast(Message.BuildRoad, placer.PlayerColor.ToString(), col.ToString(), row.ToString(), rightLeft, upDown, 0.ToString());
             placer.RoadsLeft--;
         }
 
@@ -314,6 +326,11 @@ namespace Catan_Server
                                             Resource resource = (Resource)Enum.Parse(typeof(Resource), Board.Tiles[tile.column][tile.row][SerializableBoard.ResourceType]);
                                             player.resources.Add(resource);
                                             Broadcast(Message.AddResource, player.PlayerColor.ToString(), tile.column.ToString(), tile.row.ToString(), resource.ToString());
+                                            if (cross.IsCity)
+                                            {
+                                                player.resources.Add(resource);
+                                                Broadcast(Message.AddResource, player.PlayerColor.ToString(), tile.column.ToString(), tile.row.ToString(), resource.ToString());
+                                            }
                                         }
                                     }
                                 }
@@ -330,7 +347,159 @@ namespace Catan_Server
                 {
                     switch (message)
                     {
+                        case Message.Purchase:
+                            {
+                                string item = active.ReadLine();
+                                if (active.HasResources(costs[item]))
+                                {
+                                    switch (item)
+                                    {
+                                        case "Road":
+                                            {
+                                                if (active.RoadsLeft == 0)
+                                                {
+                                                    active.WriteLine(Message.Cancel.ToString());
+                                                    active.WriteLine("You are out of roads!");
+                                                    break;
+                                                }
 
+                                                List<Place> canBuild = Board.PlacesCanBuild(active.PlayerColor, false);
+                                                if (canBuild.Count == 0)
+                                                {
+                                                    active.WriteLine(Message.Cancel.ToString());
+                                                    active.WriteLine("There is no space for you to place a road!");
+                                                    break;
+                                                }
+
+                                                active.WriteLine(Message.PlaceRoad.ToString());
+                                                active.Send(canBuild); // Roads can be built around where villages can be built
+
+                                                string placement = active.ReadLine();
+
+                                                if (placement == Message.Cancel.ToString())
+                                                    break;
+                                                else
+                                                {
+                                                    string[] crossNRoad = placement.Split(',');
+                                                    string[] colRow = crossNRoad[0].Split(' ');
+                                                    string[] directions = crossNRoad[1].Split(' ');
+                                                    int col = int.Parse(colRow[0]), row = int.Parse(colRow[1]);
+                                                    int rightLeft = int.Parse(directions[0]), upDown = int.Parse(directions[1]);
+
+                                                    Board.Crossroads[col][row].Roads[rightLeft][upDown].Build(active.PlayerColor);
+
+                                                    List<string> parameters = new List<string>(new string[] { active.PlayerColor.ToString(), col.ToString(), row.ToString(), rightLeft.ToString(), upDown.ToString(), costs[item].Length.ToString() });
+                                                    foreach (Resource resource in costs[item])
+                                                    {
+                                                        parameters.Add(resource.ToString());
+                                                        active.resources.Remove(resource);
+                                                    }
+                                                    Broadcast(Message.BuildRoad, parameters.ToArray());
+                                                    active.RoadsLeft--;
+                                                }
+                                            }
+                                            break;
+                                        case "Village":
+                                            {
+                                                if (active.VillagesLeft == 0)
+                                                {
+                                                    active.WriteLine(Message.Cancel.ToString());
+                                                    active.WriteLine("You are out of villages! Upgrade a village to a city to get it back");
+                                                    break;
+                                                }
+
+                                                List<Place> canBuild = Board.PlacesCanBuild(active.PlayerColor, true);
+                                                if (canBuild.Count == 0)
+                                                {
+                                                    active.WriteLine(Message.Cancel.ToString());
+                                                    active.WriteLine("There is no space for you to place a village!");
+                                                    break;
+                                                }
+
+                                                active.WriteLine(Message.PlaceVillage.ToString());
+                                                active.Send(canBuild);
+
+                                                string placement = active.ReadLine();
+
+                                                if (placement == Message.Cancel.ToString())
+                                                    break;
+                                                else
+                                                {
+                                                    string[] colRow = placement.Split(' ');
+                                                    int col = int.Parse(colRow[0]), row = int.Parse(colRow[1]);
+
+                                                    Board.Crossroads[col][row].BuildVillage(active.PlayerColor);
+
+                                                    active.VillagesLeft--;
+                                                    active.VictoryPoints++;
+
+                                                    List<string> parameters = new List<string>(new string[] { active.PlayerColor.ToString(), col.ToString(), row.ToString(), active.VictoryPoints.ToString(), costs[item].Length.ToString() });
+                                                    foreach (Resource resource in costs[item])
+                                                    {
+                                                        parameters.Add(resource.ToString());
+                                                        active.resources.Remove(resource);
+                                                    }
+                                                    Broadcast(Message.BuildVillage, parameters.ToArray());
+                                                    
+                                                }
+                                            }
+                                            break;
+                                        case "City":
+                                            {
+                                                if (active.CitiesLeft == 0)
+                                                {
+                                                    active.WriteLine(Message.Cancel.ToString());
+                                                    active.WriteLine("You are out of cities!");
+                                                    break;
+                                                }
+
+                                                List<Place> canBuild = Board.VillagesOfColor(active.PlayerColor);
+                                                if (canBuild.Count == 0)
+                                                {
+                                                    active.WriteLine(Message.Cancel.ToString());
+                                                    active.WriteLine("You have no villages to upgrade to cities!");
+                                                    break;
+                                                }
+
+                                                active.WriteLine(Message.PlaceCity.ToString());
+                                                active.Send(canBuild);
+
+                                                string placement = active.ReadLine();
+
+                                                if (placement == Message.Cancel.ToString())
+                                                    break;
+                                                else
+                                                {
+                                                    string[] colRow = placement.Split(' ');
+                                                    int col = int.Parse(colRow[0]), row = int.Parse(colRow[1]);
+
+                                                    Board.Crossroads[col][row].UpgradeToCity();
+
+                                                    active.CitiesLeft--;
+                                                    active.VillagesLeft++;
+                                                    active.VictoryPoints++;
+
+                                                    List<string> parameters = new List<string>(new string[] { active.PlayerColor.ToString(), col.ToString(), row.ToString(), active.VictoryPoints.ToString(), costs[item].Length.ToString() });
+                                                    foreach (Resource resource in costs[item])
+                                                    {
+                                                        parameters.Add(resource.ToString());
+                                                        active.resources.Remove(resource);
+                                                    }
+                                                    Broadcast(Message.UpgradeToCity, parameters.ToArray());
+                                                }
+                                            }
+                                            break;
+                                        case "Development Card":
+                                            break;
+                                    }
+                                }
+                                else
+                                {
+                                    active.WriteLine(Message.Cancel.ToString());
+                                    active.WriteLine("You do not have enough resources to buy that!");
+                                }
+                                break;
+                            }
                     }
                     message = (Message)Enum.Parse(typeof(Message), active.ReadLine());
                 }

@@ -91,6 +91,19 @@ namespace Catan_Server
             return taking;
         }
 
+        public bool HasResources(Resource[] cost)
+        {
+            List<Resource> temp = new List<Resource>(this.resources);
+            foreach (Resource item in cost)
+            {
+                if (temp.Contains(item))
+                    temp.Remove(item);
+                else
+                    return false;
+            }
+            return true;
+        }
+
         /// <summary>
         /// Closes the player's socket
         /// </summary>

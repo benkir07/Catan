@@ -146,7 +146,8 @@ public class MyHandManager : HandManager
 
         GameObject vx = canvas.transform.Find("V or X").gameObject;
         Button V = vx.transform.Find("V").gameObject.GetComponent<Button>();
-        V.onClick.AddListener(() =>
+        V.onClick.RemoveAllListeners();
+        V.onClick.AddListener(delegate
         {
             if (Discarding.Count == CardsToDiscard)
             {
@@ -169,10 +170,11 @@ public class MyHandManager : HandManager
                 vx.transform.Find("X").gameObject.SetActive(true);
                 vx.SetActive(false);
                 V.onClick.RemoveAllListeners();
+                V.onClick.AddListener(GetComponent<Player>().ConfirmPlace);
             }
             else
             {
-                throw new System.Exception("Not enough cards selected");
+                throw new Exception("Not enough cards selected");
             }
         });
     }

@@ -297,7 +297,7 @@ public class SerializableBoard
     /// <param name="color">The player's color</param>
     /// <param name="needRoadLink">Boolean whether or not a roadway connection to the crossroad is needed (default is true because a connection is needed at all times but the first two placements)</param>
     /// <returns>The places where the player can build villages</returns>
-    public List<Place> PlacesCanBuildVillage(PlayerColor color, bool needRoadLink = true)
+    public List<Place> PlacesCanBuild(PlayerColor color, bool checkDistance, bool needRoadLink = true)
     {
         List<Place> ableToBuild = new List<Place>();
 
@@ -306,15 +306,34 @@ public class SerializableBoard
             for (int row = 0; row < Crossroads[col].Length; row++)
             {
                 SerializableCross cross = Crossroads[col][row];
-                if (cross.PlayerColor == null && !cross.TooCloseToBuild())
+                if (!checkDistance || (cross.PlayerColor == null && !cross.TooCloseToBuild()))
                 {
-                    if (!needRoadLink || Crossroads[col][row].ConnectedByRoad(color))
+                    if (!needRoadLink || cross.ConnectedByRoad(color))
                         ableToBuild.Add(new Place(col, row));
                 }
             }
         }
 
         return ableToBuild;
+    }
+
+    public List<Place> VillagesOfColor(PlayerColor color)
+    {
+        List<Place> places = new List<Place>();
+
+        for (int col = 0; col < Crossroads.Length; col++)
+        {
+            for (int row = 0; row < Crossroads[col].Length; row++)
+            {
+                SerializableCross cross = Crossroads[col][row];
+                if (cross.PlayerColor == color && cross.IsCity == false)
+                {
+                    places.Add(new Place(col, row));
+                }
+            }
+        }
+
+        return places;
     }
 }
 
@@ -470,6 +489,10 @@ public class SerializableCross
             {
                 if (road != null)
                 {
+                    if (road.PlayerColor != null)
+                    {
+                        Console.WriteLine();
+                    }
                     if (road.PlayerColor == PlayerColor)
                     {
                         return true;
@@ -559,7 +582,7 @@ public class SerializableRoad
     /// <summary>
     /// Places a road object in this road's place.
     /// </summary>
-    /// <param name="PlayerColor">PlayerColor of the player building the road</param>
+    /// <param name="PlayerColor">Color of the player building the road</param>
     public virtual void Build(PlayerColor PlayerColor)
     {
         if (this.PlayerColor != null)
@@ -593,9 +616,17 @@ public enum Message
     ChooseSteal,
     Steal,
     MainPhase,
+    EndTurn,
+    Purchase,
+    Cancel,
+    PlaceRoad,
+    PlaceVillage,
+
+    PlaceCity,
+    UpgradeToCity,
+    BuyCard,
 
     Trade,
-    EndTurn
 }
 
 public enum TileTypes

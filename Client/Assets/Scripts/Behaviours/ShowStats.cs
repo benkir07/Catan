@@ -10,9 +10,23 @@ public class ShowStats : MonoBehaviour, IPointerEnterHandler, IPointerExitHandle
 
     public List<GameObject> PlayerInfos { get; } = new List<GameObject>();
 
+    private bool HidInfos = false;
+
     private void Awake()
     {
         instance = this;
+    }
+
+    private void Update()
+    {
+        if (!HidInfos)
+        {
+            foreach (GameObject info in PlayerInfos)
+            {
+                info.SetActive(false);
+            }
+            HidInfos = true;
+        }
     }
 
     public void LoadInfos()
@@ -20,7 +34,6 @@ public class ShowStats : MonoBehaviour, IPointerEnterHandler, IPointerExitHandle
         foreach (PlayerInfo info in GameObject.FindObjectsOfType<PlayerInfo>())
         {
             PlayerInfos.Add(info.gameObject);
-            info.gameObject.SetActive(false);
         }
     }
 

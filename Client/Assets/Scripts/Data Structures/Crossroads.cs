@@ -122,16 +122,18 @@ public class Crossroads : SerializableCross
     }
 
     /// <summary>
-    /// Visalizes a theoretical village for the player to choose from when placing.
+    /// Visalizes a theoretical village or city for the player to choose from when placing.
     /// </summary>
-    /// <param name="color">the color to visualize the village</param>
+    /// <param name="color">the color to visualize</param>
     /// <returns>the visual's game object</returns>
     public GameObject Visualize(PlayerColor color)
     {
-        if (this.PlayerColor != null)
-            throw new System.Exception("Cannot visalize a place with a Building on it.");
-        
-        GameObject visual = GameObject.Instantiate(Prefabs.Buildings["Village"], Object.FindObjectOfType<Player>().transform);
+        GameObject visual;
+        if (this.PlayerColor == null)
+            visual = GameObject.Instantiate(Prefabs.Buildings["Village"]);
+        else
+            visual = GameObject.Instantiate(Prefabs.Buildings["City"]);
+
         visual.transform.position += Offset;
 
         visual.GetComponentInChildren<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;

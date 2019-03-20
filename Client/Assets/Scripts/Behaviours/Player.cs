@@ -21,7 +21,9 @@ public class Player : MonoBehaviour
         StartSelected,
         RobberVisualized,
         RobberSelected,
-        MainPhase
+        MainPhase,
+        BuildVisualized,
+        BuildSelected
     }
     private State? state = null;
     public GameObject canvas;
@@ -59,8 +61,20 @@ public class Player : MonoBehaviour
         canvas.transform.Find("PlayersInfo").gameObject.SetActive(true);
         canvas.transform.Find("PlayersInfo/ShowStats").GetComponent<ShowStats>().LoadInfos();
 
+        canvas.transform.Find("V or X/V").GetComponent<Button>().onClick.AddListener(GetComponent<Player>().ConfirmPlace);
+
         color = (PlayerColor)Enum.Parse(typeof(PlayerColor), network.ReadLine());
         int playerAmount = int.Parse(network.ReadLine());
+
+        Transform buildPanel = canvas.transform.Find("Build Panel");
+        for (int i = 0; i < buildPanel.childCount; i++)
+        {
+            Transform model = buildPanel.GetChild(i).Find("Model");
+            if (model != null)
+            {
+                model.GetChild(0).GetComponent<Renderer>().material = Prefabs.UIColors[color];
+            }
+        }
 
         // Sets each info's color label to its relevant value, depending on our color.
         // Disables not needed infos.
@@ -75,6 +89,7 @@ public class Player : MonoBehaviour
             else // Disables the showing of not needed info objects.
             {
                 ShowStats.instance.PlayerInfos.Remove(GetInfoObj(color).gameObject);
+                GetInfoObj(color).gameObject.SetActive(false);
             }
         }
 
@@ -109,12 +124,12 @@ public class Player : MonoBehaviour
                         GameObject vx = canvas.transform.Find("V or X").gameObject;
                         vx.SetActive(true);
                         vx.transform.Find("X").gameObject.SetActive(false);
-                        vx.transform.Find("V").gameObject.GetComponent<Button>().onClick.AddListener(ConfirmPlace);
                         OnScreenText.SetText("Are you sure you want to place there?\nChoose a new place to change the position");
                         state = State.StartSelected;
                     }
                     break;
                 case State.StartSelected:
+                case State.BuildSelected:
                     SelectVisual();
                     break;
                 case State.RobberVisualized:
@@ -123,7 +138,6 @@ public class Player : MonoBehaviour
                         GameObject vx = canvas.transform.Find("V or X").gameObject;
                         vx.SetActive(true);
                         vx.transform.Find("X").gameObject.SetActive(false);
-                        vx.transform.Find("V").gameObject.GetComponent<Button>().onClick.AddListener(ConfirmPlace);
                         OnScreenText.SetText("Are you sure you want to place there?\nChoose a new place to change the position");
                         state = State.RobberSelected;
                     }
@@ -131,9 +145,35 @@ public class Player : MonoBehaviour
                 case State.RobberSelected:
                     SelectRobberPlace();
                     break;
+
+                case State.MainPhase:
+                    {
+                        if (Input.GetMouseButtonDown(0))
+                        {
+                            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                            if (Physics.Raycast(ray, out RaycastHit hit))
+                            {
+                                if (hit.transform.name == "Model" || hit.transform.name == "Image")
+                                {
+                                    network.WriteLine(Message.Purchase.ToString());
+                                    network.WriteLine(hit.transform.parent.name);
+                                    hit.transform.gameObject.GetComponent<MarkOnHover>().OnMouseExit();
+                                    canvas.transform.Find("Build Panel/X").GetComponent<Button>().onClick.Invoke();
+                                }
+                            }
+                        }
+                        break;
+                    }
+                case State.BuildVisualized:
+                    if (SelectVisual())
+                    {
+                        canvas.transform.Find("V or X").gameObject.SetActive(true);
+                        OnScreenText.SetText("Are you sure you want to place there?\nChoose a new place to change the position\nClick X to cancel the build");
+                        state = State.BuildSelected;
+                    }
+                    break;
             }
         }
-
     }
 
     /// <summary>
@@ -160,7 +200,7 @@ public class Player : MonoBehaviour
             case Message.StartPlace:
                 {
                     List<Place> places = network.Deserialize<List<Place>>();
-                    VisualizeVillages(places);
+                    VisualizeCrossroads(places);
                     OnScreenText.SetText("Choose a place to build your starting village");
                     state = State.StartVisualized;
                     break;
@@ -172,13 +212,17 @@ public class Player : MonoBehaviour
                     int col = int.Parse(network.ReadLine());
                     int row = int.Parse(network.ReadLine());
                     Crossroads crossroad = Board.Crossroads[new Place(col, row)];
+
+                    Vector3 payTo = Vector3.zero;
                     if (message == Message.BuildVillage)
                     {
-                        int victoryPoints = int.Parse(network.ReadLine());
+                        string victoryPoints = network.ReadLine();
 
                         crossroad.BuildVillage(color);
 
-                        GetInfoObj(color).GetInfo(PlayerInfo.Info.VictoryPoints).SetText(victoryPoints.ToString());
+                        payTo = crossroad.Building.transform.position;
+
+                        GetInfoObj(color).GetInfo(PlayerInfo.Info.VictoryPoints).text = victoryPoints;
 
                         if (state == State.StartSelected)
                         {
@@ -193,12 +237,25 @@ public class Player : MonoBehaviour
                     {
                         int rightLeft = int.Parse(network.ReadLine());
                         int upDown = int.Parse(network.ReadLine());
+
                         crossroad.Roads[rightLeft][upDown].Build(color);
+
+                        payTo = crossroad.Roads[rightLeft][upDown].Building.transform.position;
+
                         if (state == State.StartSelected)
                         {
                             state = null;
                         }
                     }
+
+                    int pay = int.Parse(network.ReadLine());
+
+                    for (int i = 0; i < pay; i++)
+                    {
+                        Resource resource = (Resource)Enum.Parse(typeof(Resource), network.ReadLine());
+                        GetHand(color).DiscardAnimation(resource, payTo);
+                    }
+                    GetInfoObj(color).GetInfo(PlayerInfo.Info.CardAmount).text = GetHand(color).CardAmount.ToString();
                     break;
                 }
             case Message.AddResource:
@@ -211,7 +268,7 @@ public class Player : MonoBehaviour
                     GetHand(player).AddAnimation(resource, Board.Tiles[new Place(col, row)].GameObject.transform.position);
 
                     int cardsInHand = GetHand(player).CardAmount + GetHand(player).AnimatedCards;
-                    GetInfoObj(player).GetInfo(PlayerInfo.Info.CardAmount).SetText(cardsInHand.ToString());
+                    GetInfoObj(player).GetInfo(PlayerInfo.Info.CardAmount).text = cardsInHand.ToString();
                     break;
                 }
             case Message.Discard:
@@ -223,7 +280,7 @@ public class Player : MonoBehaviour
 
                     GetHand(player).DiscardAnimation(resource, Board.Robber.transform.position);
 
-                    GetInfoObj(player).GetInfo(PlayerInfo.Info.CardAmount).SetText(GetHand(player).CardAmount.ToString());
+                    GetInfoObj(player).GetInfo(PlayerInfo.Info.CardAmount).text = GetHand(player).CardAmount.ToString();
                     break;
                 }
             case Message.Steal:
@@ -234,11 +291,11 @@ public class Player : MonoBehaviour
 
                     HandManager victimHand = GetHand(victim);
                     victimHand.Discard(resource);
-                    GetInfoObj(victim).GetInfo(PlayerInfo.Info.CardAmount).SetText(GetHand(victim).CardAmount.ToString());
+                    GetInfoObj(victim).GetInfo(PlayerInfo.Info.CardAmount).text = GetHand(victim).CardAmount.ToString();
 
                     GetHand(thief).AddAnimation(resource, victimHand.transform.position + victimHand.HandPos);
                     int cardsInHand = GetHand(thief).CardAmount + GetHand(thief).AnimatedCards;
-                    GetInfoObj(thief).GetInfo(PlayerInfo.Info.CardAmount).SetText(cardsInHand.ToString());
+                    GetInfoObj(thief).GetInfo(PlayerInfo.Info.CardAmount).text = cardsInHand.ToString();
                     break;
                 }
             case Message.PromptDiceRoll:
@@ -326,23 +383,80 @@ public class Player : MonoBehaviour
                 }
             case Message.MainPhase:
                 {
-                    GameObject button = canvas.transform.Find("End Button").gameObject;
-                    button.SetActive(true);
-                    Button buttonComp = button.GetComponent<Button>();
-                    buttonComp.onClick.AddListener(delegate { button.SetActive(false); });
-                    buttonComp.onClick.AddListener(delegate { network.WriteLine(Message.EndTurn.ToString()); });
-                    buttonComp.onClick.AddListener(buttonComp.onClick.RemoveAllListeners);
+                    canvas.transform.Find("End Button").gameObject.SetActive(true);
+                    canvas.transform.Find("Build Button").gameObject.SetActive(true);
                     state = State.MainPhase;
+                    break;
+                }
+            case Message.Cancel:
+                {
+                    OnScreenText.SetText(network.ReadLine());
+                    break;
+                }
+            case Message.PlaceRoad:
+                {
+                    List<Place> places = network.Deserialize<List<Place>>();
+                    GameObject visuals = new GameObject("Visuals Parent");
+                    visuals.transform.parent = transform;
+                    foreach (Place place in places)
+                    {
+                        VisualizeRoads(Board.Crossroads[place], visuals);
+                    }
+
+                    OnScreenText.SetText("Choose a road to build");
+                    canvas.transform.Find("End Button").gameObject.SetActive(false);
+                    canvas.transform.Find("Build Button").gameObject.SetActive(false);
+
+                    state = State.BuildVisualized;
+                    break;
+                }
+            case Message.PlaceVillage:
+            case Message.PlaceCity:
+                {
+                    List<Place> places = network.Deserialize<List<Place>>();
+                    VisualizeCrossroads(places);
+
+                    if (message == Message.PlaceVillage)
+                        OnScreenText.SetText("Choose a village to build");
+                    if (message == Message.PlaceCity)
+                        OnScreenText.SetText("Choose a village to upgrade to a city");
+                    canvas.transform.Find("End Button").gameObject.SetActive(false);
+                    canvas.transform.Find("Build Button").gameObject.SetActive(false);
+
+                    state = State.BuildVisualized;
+                    break;
+                }
+            case Message.UpgradeToCity:
+                {
+                    PlayerColor color = (PlayerColor)Enum.Parse(typeof(PlayerColor), network.ReadLine());
+                    int col = int.Parse(network.ReadLine());
+                    int row = int.Parse(network.ReadLine());
+
+                    string victoryPoints = network.ReadLine();
+                    GetInfoObj(color).GetInfo(PlayerInfo.Info.VictoryPoints).text = victoryPoints;
+
+                    Crossroads crossroad = Board.Crossroads[new Place(col, row)];
+                    crossroad.UpgradeToCity();
+
+                    int pay = int.Parse(network.ReadLine());
+
+                    Vector3 payTo = crossroad.Building.transform.position;
+                    for (int i = 0; i < pay; i++)
+                    {
+                        Resource resource = (Resource)Enum.Parse(typeof(Resource), network.ReadLine());
+                        GetHand(color).DiscardAnimation(resource, payTo);
+                    }
+                    GetInfoObj(color).GetInfo(PlayerInfo.Info.CardAmount).text = GetHand(color).CardAmount.ToString();
                     break;
                 }
         }
     }
 
     /// <summary>
-    /// Visualizes villages with this player's color in every place in the places input list.
+    /// Visualizes buildings with this player's color in every place in the places input list.
     /// </summary>
     /// <param name="places">List of the places of the crossroads that should be visualized</param>
-    private void VisualizeVillages(List<Place> places)
+    private void VisualizeCrossroads(List<Place> places)
     {
         GameObject visuals = new GameObject("Visuals Parent");
         visuals.transform.parent = transform;
@@ -453,7 +567,7 @@ public class Player : MonoBehaviour
     public void ConfirmPlace()
     {
         network.WriteLine(GameObject.FindGameObjectWithTag("Selected").name);
-        if (state == State.StartSelected)
+        if (state == State.StartSelected || state == State.BuildSelected)
             Destroy(GameObject.Find("Visuals Parent"));
         else if (state == State.RobberSelected)
         {
@@ -463,14 +577,32 @@ public class Player : MonoBehaviour
             }
             Destroy(GameObject.FindGameObjectWithTag("Selected"));
         }
+
         GameObject vx = canvas.transform.Find("V or X").gameObject;
-        vx.transform.Find("V").GetComponent<Button>().onClick.RemoveAllListeners();
         if (state == State.StartSelected || state == State.RobberSelected)
         {
             vx.transform.Find("X").gameObject.SetActive(true);
         }
         vx.SetActive(false);
         OnScreenText.SetText("");
+        if (state == State.BuildSelected)
+        {
+            canvas.transform.Find("End Button").gameObject.SetActive(true);
+            canvas.transform.Find("Build Button").gameObject.SetActive(true);
+            state = State.MainPhase;
+        }
+    }
+
+    public void CancelBuild()
+    {
+        network.WriteLine(Message.Cancel.ToString());
+        Destroy(GameObject.Find("Visuals Parent"));
+        canvas.transform.Find("V or X").gameObject.SetActive(false);
+        OnScreenText.SetText("");
+        canvas.transform.Find("End Button").gameObject.SetActive(true);
+        canvas.transform.Find("Build Button").gameObject.SetActive(true);
+
+        state = State.MainPhase;
     }
 
     /// <summary>

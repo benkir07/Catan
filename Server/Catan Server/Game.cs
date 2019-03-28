@@ -500,6 +500,138 @@ namespace Catan_Server
                                 }
                                 break;
                             }
+                        case Message.Trade:
+                            {
+                                string offer = active.ReadLine();
+                                if (offer == "")
+                                {
+                                    active.WriteLine(Message.Cancel.ToString());
+                                    active.WriteLine("Trade is empty");
+                                    break;
+                                }
+                                List<Resource> getting = new List<Resource>();
+                                List<Resource> giving = new List<Resource>();
+                                foreach (string item in offer.Split(','))
+                                {
+                                    Resource trading = (Resource)Enum.Parse(typeof(Resource), item.Split(' ')[0]);
+                                    int value = int.Parse(item.Split(' ')[1]);
+
+                                    if (value > 0)
+                                    {
+                                        for (int i = 0; i < value; i++)
+                                        {
+                                            getting.Add(trading);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        for (int i = 0; i < -value; i++)
+                                        {
+                                            giving.Add(trading);
+                                        }
+                                    }
+                                }
+                                if (giving.Count == 0 || getting.Count == 0)
+                                {
+                                    active.WriteLine(Message.Cancel.ToString());
+                                    active.WriteLine("You must get AND give resources during trade");
+                                    break;
+                                }
+                                if (!active.HasResources(giving.ToArray()))
+                                {
+                                    active.WriteLine(Message.Cancel.ToString());
+                                    active.WriteLine("You do not have those resources");
+                                    break;
+                                }
+
+                                List<Player> thinking = new List<Player>();
+                                foreach (Player player in players)
+                                {
+                                    if (player != active)
+                                    {
+                                        if (player.HasResources(getting.ToArray()))
+                                        {
+                                            player.WriteLine(Message.Trade.ToString());
+                                            player.WriteLine(offer);
+                                            thinking.Add(player);
+                                        }
+                                        else
+                                        {
+                                            player.WriteLine(Message.ShowOffer.ToString());
+                                            player.WriteLine(offer);
+                                        }
+                                    }
+                                }
+
+                                Thread.Sleep(3000);
+
+                                string accepted = "";
+                                while (thinking.Count > 0)
+                                {
+                                    List<Player> done = new List<Player>();
+                                    foreach (Player player in thinking)
+                                    {
+                                        if (player.Socket.Available > 0)
+                                        {
+                                            string answer = player.ReadLine();
+                                            if (answer == "V")
+                                            {
+                                                accepted += player.PlayerColor.ToString() + " ";
+                                            }
+                                            done.Add(player);
+                                        }
+                                    }
+                                    foreach (Player toRemove in done)
+                                    {
+                                        thinking.Remove(toRemove);
+                                    }
+                                }
+                                if (accepted == "")
+                                {
+                                    Broadcast(Message.Cancel, "Trade did not succeed");
+                                    break;
+                                }
+                                active.WriteLine(Message.ChoosePartner.ToString());
+                                active.WriteLine(accepted.Substring(0, accepted.Length - 1));
+
+                                string ans = active.ReadLine();
+                                if (!accepted.Contains(ans))
+                                {
+                                    Broadcast(Message.Cancel, "Trade did not succeed");
+                                    break;
+                                }
+
+                                PlayerColor trader = (PlayerColor)Enum.Parse(typeof(PlayerColor), ans);
+                                Player traderObj = active;
+                                foreach (Player player in players)
+                                {
+                                    if (player.PlayerColor == trader)
+                                        traderObj = player;
+                                }
+
+                                List<string> parameters = new List<string>()
+                                {
+                                    active.PlayerColor.ToString(),
+                                    trader.ToString(),
+                                    getting.Count.ToString()
+                                };
+                                foreach (Resource item in getting)
+                                {
+                                    parameters.Add(item.ToString());
+                                    active.resources.Add(item);
+                                    traderObj.resources.Remove(item);
+                                }
+                                parameters.Add(giving.Count.ToString());
+                                foreach (Resource item in giving)
+                                {
+                                    parameters.Add(item.ToString());
+                                    active.resources.Remove(item);
+                                    traderObj.resources.Add(item);
+                                }
+
+                                Broadcast(Message.TradeSuccess, parameters.ToArray());
+                                break;
+                            }
                     }
                     message = (Message)Enum.Parse(typeof(Message), active.ReadLine());
                 }

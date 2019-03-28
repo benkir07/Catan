@@ -18,7 +18,7 @@ public class MyHandManager : HandManager
     protected new ResourceCard[] Hand;
     public int CardsToDiscard { get; private set; } = 0;
     protected List<Resource> Discarding;
-    protected GameObject canvas;
+    protected Transform canvas;
 
     /// <summary>
     /// Runs as the game starts and initializes the Hand.
@@ -60,7 +60,7 @@ public class MyHandManager : HandManager
                         Discarding.Remove(clicked);
                     }
 
-                    GameObject vx = canvas.transform.Find("V or X").gameObject;
+                    GameObject vx = canvas.Find("V or X").gameObject;
                     if (Discarding.Count == CardsToDiscard)
                     {
                         vx.SetActive(true);
@@ -144,8 +144,8 @@ public class MyHandManager : HandManager
         CardsToDiscard = amount;
         Discarding = new List<Resource>();
 
-        GameObject vx = canvas.transform.Find("V or X").gameObject;
-        Button V = vx.transform.Find("V").gameObject.GetComponent<Button>();
+        Transform vx = canvas.Find("V or X");
+        Button V = vx.Find("V").GetComponent<Button>();
         V.onClick.RemoveAllListeners();
         V.onClick.AddListener(delegate
         {
@@ -167,8 +167,8 @@ public class MyHandManager : HandManager
                 discard = discard.Substring(0, discard.Length - 1);
                 GetComponent<NetworkManager>().WriteLine(discard);
                 CardsToDiscard = 0;
-                vx.transform.Find("X").gameObject.SetActive(true);
-                vx.SetActive(false);
+                vx.Find("X").gameObject.SetActive(true);
+                vx.gameObject.SetActive(false);
                 V.onClick.RemoveAllListeners();
                 V.onClick.AddListener(GetComponent<Player>().ConfirmPlace);
             }

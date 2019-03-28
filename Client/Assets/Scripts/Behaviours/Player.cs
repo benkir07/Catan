@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using UnityEngine.UI;
 using TMPro;
@@ -26,7 +27,7 @@ public class Player : MonoBehaviour
         BuildSelected
     }
     private State? state = null;
-    public GameObject canvas;
+    public Transform canvas;
     public TextMeshProUGUI OnScreenText;
 
     /// <summary>
@@ -54,19 +55,19 @@ public class Player : MonoBehaviour
         dice.enabled = true;
         cardsInHand.enabled = true;
 
-        canvas = GameObject.Find("Canvas/Game");
-        OnScreenText = canvas.transform.Find("Message").GetComponent<TextMeshProUGUI>();
+        canvas = GameObject.Find("Canvas/Game").transform;
+        OnScreenText = canvas.Find("Message").GetComponent<TextMeshProUGUI>();
 
-        canvas.transform.Find("Turns").gameObject.SetActive(true);
-        canvas.transform.Find("PlayersInfo").gameObject.SetActive(true);
-        canvas.transform.Find("PlayersInfo/ShowStats").GetComponent<ShowStats>().LoadInfos();
+        canvas.Find("Turns").gameObject.SetActive(true);
+        canvas.Find("PlayersInfo").gameObject.SetActive(true);
+        canvas.Find("PlayersInfo/ShowStats").GetComponent<ShowStats>().LoadInfos();
 
-        canvas.transform.Find("V or X/V").GetComponent<Button>().onClick.AddListener(GetComponent<Player>().ConfirmPlace);
+        canvas.Find("V or X/V").GetComponent<Button>().onClick.AddListener(GetComponent<Player>().ConfirmPlace);
 
         color = (PlayerColor)Enum.Parse(typeof(PlayerColor), network.ReadLine());
         int playerAmount = int.Parse(network.ReadLine());
 
-        Transform buildPanel = canvas.transform.Find("Build Panel");
+        Transform buildPanel = canvas.Find("Build Panel");
         for (int i = 0; i < buildPanel.childCount; i++)
         {
             Transform model = buildPanel.GetChild(i).Find("Model");
@@ -121,7 +122,7 @@ public class Player : MonoBehaviour
                 case State.StartVisualized:
                     if (SelectVisual())
                     {
-                        GameObject vx = canvas.transform.Find("V or X").gameObject;
+                        GameObject vx = canvas.Find("V or X").gameObject;
                         vx.SetActive(true);
                         vx.transform.Find("X").gameObject.SetActive(false);
                         OnScreenText.SetText("Are you sure you want to place there?\nChoose a new place to change the position");
@@ -135,7 +136,7 @@ public class Player : MonoBehaviour
                 case State.RobberVisualized:
                     if (SelectRobberPlace())
                     {
-                        GameObject vx = canvas.transform.Find("V or X").gameObject;
+                        GameObject vx = canvas.Find("V or X").gameObject;
                         vx.SetActive(true);
                         vx.transform.Find("X").gameObject.SetActive(false);
                         OnScreenText.SetText("Are you sure you want to place there?\nChoose a new place to change the position");
@@ -158,7 +159,7 @@ public class Player : MonoBehaviour
                                     network.WriteLine(Message.Purchase.ToString());
                                     network.WriteLine(hit.transform.parent.name);
                                     hit.transform.gameObject.GetComponent<MarkOnHover>().OnMouseExit();
-                                    canvas.transform.Find("Build Panel/X").GetComponent<Button>().onClick.Invoke();
+                                    canvas.Find("Build Panel/X").GetComponent<Button>().onClick.Invoke();
                                 }
                             }
                         }
@@ -167,7 +168,7 @@ public class Player : MonoBehaviour
                 case State.BuildVisualized:
                     if (SelectVisual())
                     {
-                        canvas.transform.Find("V or X").gameObject.SetActive(true);
+                        canvas.Find("V or X").gameObject.SetActive(true);
                         OnScreenText.SetText("Are you sure you want to place there?\nChoose a new place to change the position\nClick X to cancel the build");
                         state = State.BuildSelected;
                     }
@@ -193,8 +194,10 @@ public class Player : MonoBehaviour
             case Message.NewTurn:
                 {
                     PlayerColor playerColor = (PlayerColor)Enum.Parse(typeof(PlayerColor), network.ReadLine());
-                    canvas.transform.Find("Turns").gameObject.GetComponent<TextMeshProUGUI>().SetText(playerColor.ToString() + " Player's Turn");
-                    canvas.transform.Find("Turns/Image").gameObject.GetComponent<Image>().color = Prefabs.Colors[playerColor].color;
+                    canvas.Find("Turns").gameObject.GetComponent<TextMeshProUGUI>().SetText(playerColor.ToString() + " Player's Turn");
+                    canvas.Find("Turns/Image").gameObject.GetComponent<Image>().color = Prefabs.Colors[playerColor].color;
+
+                    OnScreenText.SetText("");
                     break;
                 }
             case Message.StartPlace:
@@ -301,7 +304,7 @@ public class Player : MonoBehaviour
             case Message.PromptDiceRoll:
                 {
                     GetComponent<DiceThrower>().ShowDice();
-                    GameObject button = canvas.transform.Find("Dice Button").gameObject;
+                    GameObject button = canvas.Find("Dice Button").gameObject;
                     button.SetActive(true);
                     Button buttonComp = button.GetComponent<Button>();
                     buttonComp.onClick.AddListener(GetComponent<DiceThrower>().HideDice);
@@ -355,13 +358,14 @@ public class Player : MonoBehaviour
                     cardsInHand.DiscardCards(discard);
                     break;
                 }
+            case Message.ChoosePartner:
             case Message.ChooseSteal:
                 {
-                    string playersCanStealFrom = network.ReadLine();
+                    string colorsToShow = network.ReadLine();
 
-                    Transform colorsPanel = canvas.transform.Find("Colors");
+                    Transform colorsPanel = canvas.Find("Colors");
 
-                    foreach (string player in playersCanStealFrom.Split(' '))
+                    foreach (string player in colorsToShow.Split(' '))
                     {
                         PlayerColor color = (PlayerColor)Enum.Parse(typeof(PlayerColor), player);
                         Debug.Log(color);
@@ -377,20 +381,62 @@ public class Player : MonoBehaviour
                             }
                             OnScreenText.SetText("");
                         });
+                        if (message == Message.ChoosePartner)
+                        {
+                            button.GetComponent<Button>().onClick.AddListener(delegate
+                            {
+                                canvas.Find("V or X/V").gameObject.SetActive(true);
+                                canvas.Find("V or X").gameObject.SetActive(false);
+                                canvas.Find("V or X/X").GetComponent<Button>().onClick.RemoveAllListeners();
+                            });
+                        }
                     }
-                    OnScreenText.SetText("Choose a player to steal from");
+
+                    if (message == Message.ChooseSteal)
+                        OnScreenText.SetText("Choose a player to steal from");
+                    else if (message == Message.ChoosePartner)
+                    {
+                        OnScreenText.SetText("These are the players who want and can trade with you\nChoose a trade partner or click X to cancel the trade");
+                        Transform vx = canvas.Find("V or X");
+                        vx.gameObject.SetActive(true);
+                        vx.Find("V").gameObject.SetActive(false);
+                        Button x = vx.Find("X").GetComponent<Button>();
+                        x.onClick.AddListener(delegate
+                        {
+                            canvas.Find("End Button").GetComponent<Button>().interactable = true;
+                            canvas.Find("Build Button").GetComponent<Button>().interactable = true;
+                            canvas.Find("Trade Button").GetComponent<Button>().interactable = true;
+
+                            vx.Find("V").gameObject.SetActive(true);
+                            vx.gameObject.SetActive(false);
+
+                            foreach (Button colorButton in colorsPanel.GetComponentsInChildren<Button>())
+                            {
+                                colorButton.onClick.RemoveAllListeners();
+                                colorButton.gameObject.SetActive(false);
+                            }
+                            OnScreenText.SetText("");
+
+                            x.onClick.RemoveAllListeners();
+                        });
+                    }
                     break;
                 }
             case Message.MainPhase:
                 {
-                    canvas.transform.Find("End Button").gameObject.SetActive(true);
-                    canvas.transform.Find("Build Button").gameObject.SetActive(true);
+                    canvas.Find("End Button").gameObject.SetActive(true);
+                    canvas.Find("Build Button").gameObject.SetActive(true);
+                    canvas.Find("Trade Button").gameObject.SetActive(true);
                     state = State.MainPhase;
                     break;
                 }
             case Message.Cancel:
                 {
                     OnScreenText.SetText(network.ReadLine());
+                    canvas.Find("Trade Offer").gameObject.SetActive(false);
+                    canvas.Find("End Button").GetComponent<Button>().interactable = true;
+                    canvas.Find("Build Button").GetComponent<Button>().interactable = true;
+                    canvas.Find("Trade Button").GetComponent<Button>().interactable = true;
                     break;
                 }
             case Message.PlaceRoad:
@@ -404,8 +450,8 @@ public class Player : MonoBehaviour
                     }
 
                     OnScreenText.SetText("Choose a road to build");
-                    canvas.transform.Find("End Button").gameObject.SetActive(false);
-                    canvas.transform.Find("Build Button").gameObject.SetActive(false);
+                    canvas.Find("End Button").gameObject.SetActive(false);
+                    canvas.Find("Build Button").gameObject.SetActive(false);
 
                     state = State.BuildVisualized;
                     break;
@@ -420,8 +466,9 @@ public class Player : MonoBehaviour
                         OnScreenText.SetText("Choose a village to build");
                     if (message == Message.PlaceCity)
                         OnScreenText.SetText("Choose a village to upgrade to a city");
-                    canvas.transform.Find("End Button").gameObject.SetActive(false);
-                    canvas.transform.Find("Build Button").gameObject.SetActive(false);
+                    canvas.Find("End Button").gameObject.SetActive(false);
+                    canvas.Find("Build Button").gameObject.SetActive(false);
+                    canvas.Find("Trade Button").gameObject.SetActive(false);
 
                     state = State.BuildVisualized;
                     break;
@@ -447,6 +494,102 @@ public class Player : MonoBehaviour
                         GetHand(color).DiscardAnimation(resource, payTo);
                     }
                     GetInfoObj(color).GetInfo(PlayerInfo.Info.CardAmount).text = GetHand(color).CardAmount.ToString();
+                    break;
+                }
+            case Message.Trade:
+            case Message.ShowOffer:
+                {
+                    Transform offerPanel = canvas.Find("Trade Offer");
+
+                    offerPanel.gameObject.SetActive(true);
+
+                    string offer = network.ReadLine();
+                    List<Resource> notShown = new List<Resource>(Enum.GetValues(typeof(Resource)).Cast<Resource>());
+                    foreach (string item in offer.Split(','))
+                    {
+                        Resource trading = (Resource)Enum.Parse(typeof(Resource), item.Split(' ')[0]);
+                        int value = int.Parse(item.Split(' ')[1]);
+
+                        TextMeshProUGUI give = offerPanel.Find(trading.ToString() + "/Give/Number").GetComponent<TextMeshProUGUI>();
+                        TextMeshProUGUI get = offerPanel.Find(trading.ToString() + "/Get/Number").GetComponent<TextMeshProUGUI>();
+
+                        if (value > 0)
+                        {
+                            give.SetText(value.ToString());
+                            get.SetText(0.ToString());
+                        }
+                        else
+                        {
+                            get.SetText((-value).ToString());
+                            give.SetText(0.ToString());
+                        }
+
+                        notShown.Remove(trading);
+                    }
+                    foreach (Resource item in notShown)
+                    {
+                        offerPanel.Find(item.ToString() + "/Give/Number").GetComponent<TextMeshProUGUI>().SetText(0.ToString());
+                        offerPanel.Find(item.ToString() + "/Get/Number").GetComponent<TextMeshProUGUI>().SetText(0.ToString());
+                    }
+
+                    offerPanel.Find("Accept").gameObject.SetActive(message == Message.Trade);
+                    offerPanel.Find("Decline").gameObject.SetActive(message == Message.Trade);
+
+                    TextMeshProUGUI instructions = offerPanel.Find("Instructions").GetComponent<TextMeshProUGUI>();
+                    if (message == Message.Trade)
+                    {
+                        instructions.SetText("The active player has offered this trade:");
+                    }
+                    else
+                    {
+                        instructions.SetText("The active player has offered this trade:\nYou do not have the resources he is looking for");
+                    }
+                    break;
+                }
+            case Message.TradeSuccess:
+                {
+                    PlayerColor firstTrader = (PlayerColor)Enum.Parse(typeof(PlayerColor), network.ReadLine());
+                    PlayerColor secondTrader = (PlayerColor)Enum.Parse(typeof(PlayerColor), network.ReadLine());
+
+                    int firstAmount = int.Parse(network.ReadLine());
+                    Resource[] firstGet = new Resource[firstAmount];
+                    for (int i = 0; i < firstAmount; i++)
+                    {
+                        firstGet[i] = (Resource)Enum.Parse(typeof(Resource), network.ReadLine());
+                    }
+
+                    int secondAmount = int.Parse(network.ReadLine());
+                    Resource[] secondGet = new Resource[secondAmount];
+                    for (int i = 0; i < secondAmount; i++)
+                    {
+                        secondGet[i] = (Resource)Enum.Parse(typeof(Resource), network.ReadLine());
+                    }
+
+                    HandManager firstHand = GetHand(firstTrader);
+                    HandManager secondHand = GetHand(secondTrader);
+
+                    foreach (Resource item in firstGet)
+                    {
+                        firstHand.AddAnimation(item, secondHand.transform.position + secondHand.HandPos);
+                        secondHand.Discard(item);
+                    }
+                    foreach (Resource item in secondGet)
+                    {
+                        firstHand.Discard(item);
+                        secondHand.AddAnimation(item, firstHand.transform.position + firstHand.HandPos);
+                    }
+
+                    int firstCards = firstHand.CardAmount + firstHand.AnimatedCards;
+                    GetInfoObj(firstTrader).GetInfo(PlayerInfo.Info.CardAmount).text = firstCards.ToString();
+
+                    int secondCards = secondHand.CardAmount + secondHand.AnimatedCards;
+                    GetInfoObj(secondTrader).GetInfo(PlayerInfo.Info.CardAmount).text = secondCards.ToString();
+
+                    canvas.Find("End Button").GetComponent<Button>().interactable = true;
+                    canvas.Find("Build Button").GetComponent<Button>().interactable = true;
+                    canvas.Find("Trade Button").GetComponent<Button>().interactable = true;
+
+                    OnScreenText.SetText("The " + firstTrader.ToString() + " player and the " + secondTrader.ToString() + " player managed to trade!");
                     break;
                 }
         }
@@ -578,7 +721,7 @@ public class Player : MonoBehaviour
             Destroy(GameObject.FindGameObjectWithTag("Selected"));
         }
 
-        GameObject vx = canvas.transform.Find("V or X").gameObject;
+        GameObject vx = canvas.Find("V or X").gameObject;
         if (state == State.StartSelected || state == State.RobberSelected)
         {
             vx.transform.Find("X").gameObject.SetActive(true);
@@ -587,8 +730,9 @@ public class Player : MonoBehaviour
         OnScreenText.SetText("");
         if (state == State.BuildSelected)
         {
-            canvas.transform.Find("End Button").gameObject.SetActive(true);
-            canvas.transform.Find("Build Button").gameObject.SetActive(true);
+            canvas.Find("End Button").gameObject.SetActive(true);
+            canvas.Find("Build Button").gameObject.SetActive(true);
+            canvas.Find("Trade Button").gameObject.SetActive(true);
             state = State.MainPhase;
         }
     }
@@ -597,12 +741,50 @@ public class Player : MonoBehaviour
     {
         network.WriteLine(Message.Cancel.ToString());
         Destroy(GameObject.Find("Visuals Parent"));
-        canvas.transform.Find("V or X").gameObject.SetActive(false);
+        canvas.Find("V or X").gameObject.SetActive(false);
         OnScreenText.SetText("");
-        canvas.transform.Find("End Button").gameObject.SetActive(true);
-        canvas.transform.Find("Build Button").gameObject.SetActive(true);
+        canvas.Find("End Button").gameObject.SetActive(true);
+        canvas.Find("Build Button").gameObject.SetActive(true);
+        canvas.Find("Trade Button").gameObject.SetActive(true);
 
         state = State.MainPhase;
+    }
+
+    public void ConfirmTradeOffer()
+    {
+        Transform tradePanel = canvas.Find("Trade Panel");
+        string offer = "";
+        foreach (Resource resource in Enum.GetValues(typeof(Resource)))
+        {
+            int give = tradePanel.Find(resource.ToString() + "/Give").GetComponent<NumberField>().CurrentNum;
+            int get = tradePanel.Find(resource.ToString() + "/Get").GetComponent<NumberField>().CurrentNum;
+            if (give != 0 || get != 0)
+            {
+                if (give != 0 && get != 0)
+                {
+                    OnScreenText.SetText("You cannot give and take the same resource!\nOne of them must be zero");
+                    canvas.Find("End Button").GetComponent<Button>().interactable = true;
+                    canvas.Find("Build Button").GetComponent<Button>().interactable = true;
+                    canvas.Find("Trade Button").GetComponent<Button>().interactable = true;
+                    return;
+                }
+                offer += resource.ToString() + " " + (get - give) + ",";
+            }
+        }
+        if (offer == "")
+        {
+            OnScreenText.SetText("Trade is empty");
+            canvas.Find("End Button").GetComponent<Button>().interactable = true;
+            canvas.Find("Build Button").GetComponent<Button>().interactable = true;
+            canvas.Find("Trade Button").GetComponent<Button>().interactable = true;
+        }
+        else
+        {
+            OnScreenText.SetText("Sent trade offer to the other players");
+            network.WriteLine(Message.Trade.ToString());
+            network.WriteLine(offer.Substring(0, offer.Length - 1));
+            Debug.LogWarning(offer.Substring(0, offer.Length - 1));
+        }
     }
 
     /// <summary>

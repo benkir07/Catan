@@ -627,6 +627,9 @@ public enum Message
     BuyCard,
 
     Trade,
+    ShowOffer,
+    ChoosePartner,
+    TradeSuccess
 }
 
 public enum TileTypes

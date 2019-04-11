@@ -17,10 +17,12 @@ namespace Catan_Server
 
         public PlayerColor PlayerColor { get; }
         public List<Resource> resources = new List<Resource>();
+        public List<DevCard> devCards = new List<DevCard>();
         public int VillagesLeft = 5;
         public int CitiesLeft = 4;
         public int RoadsLeft = 15;
         public int VictoryPoints = 0;
+        public int SecretPoints = 0;
 
 
         /// <summary>

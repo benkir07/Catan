@@ -328,12 +328,28 @@ public class SerializableBoard
                 SerializableCross cross = Crossroads[col][row];
                 if (cross.PlayerColor == color && cross.IsCity == false)
                 {
-                        places.Add(new Place(col, row));
+                    places.Add(new Place(col, row));
                 }
             }
         }
 
         return places;
+    }
+
+    public List<Place> CanMoveRobberTo()
+    {
+        List<Place> tilesCanMoveTo = new List<Place>();
+        for (int col = 1; col < this.Tiles.Length - 1; col++)
+        {
+            for (int row = 1; row < this.Tiles[col].Length - 1; row++)
+            {
+                if (!this.RobberPlace.Equals(new Place(col, row)))
+                {
+                    tilesCanMoveTo.Add(new Place(col, row));
+                }
+            }
+        }
+        return tilesCanMoveTo;
     }
 }
 
@@ -621,11 +637,10 @@ public enum Message
     Cancel,
     PlaceRoad,
     PlaceVillage,
-
     PlaceCity,
     UpgradeToCity,
     BuyCard,
-
+    UseCard,
     Trade,
     ShowOffer,
     ChoosePartner,
@@ -647,4 +662,17 @@ public enum Resource
     Sheep,
     Wheat,
     Wood
+}
+
+public enum DevCard
+{
+    Knight,
+    Monopoly,
+    Plenty,
+    Roads,
+    Point1,
+    Point2,
+    Point3,
+    Point4,
+    Point5
 }

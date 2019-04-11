@@ -50,7 +50,7 @@ public class HandManager : MonoBehaviour
 
             if (EqualVectors(card.transform.localPosition, towards))
             {
-                if (towards == HandPos) //if the card is going to the hand
+                if (towards == HandPos && card.GetComponent<SpriteRenderer>().sprite != Prefabs.CardBack) //if the card is going to the hand
                 {
                     AddCard(card);
                 }
@@ -88,10 +88,13 @@ public class HandManager : MonoBehaviour
     /// </summary>
     /// <param name="card">The resource of the card</param>
     /// <param name="producing">The origin of the resource (to float the card from)</param>
-    public void AddAnimation(Resource card, Vector3 producing)
+    public void AddAnimation(Resource? card, Vector3 producing)
     {
         GameObject newCard = Instantiate(Prefabs.CardPrefab, this.transform);
-        newCard.GetComponent<SpriteRenderer>().sprite = Prefabs.ResourceCards[card];
+        if (card == null)
+            newCard.GetComponent<SpriteRenderer>().sprite = Prefabs.CardBack;
+        else
+            newCard.GetComponent<SpriteRenderer>().sprite = Prefabs.ResourceCards[(Resource)card];
         newCard.transform.position = producing;
         Animated.Add((newCard, HandPos));
     }

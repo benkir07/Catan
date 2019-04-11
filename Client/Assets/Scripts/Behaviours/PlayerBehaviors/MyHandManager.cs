@@ -25,7 +25,7 @@ public class MyHandManager : HandManager
     /// </summary>
     public override void Start()
     {
-        canvas = GetComponent<Player>().canvas;
+        canvas = GetComponent<Player>().Canvas;
 
         HandPos = Prefabs.CardPrefab.transform.localPosition;
 

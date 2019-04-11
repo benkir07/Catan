@@ -1215,14 +1215,10 @@ F:\Programming\Catan\Client\Temp\bin\Debug\Unity.Analytics.DataPrivacy.dll
 F:\Programming\Catan\Client\Temp\bin\Debug\Unity.Analytics.Editor.dll
 F:\Programming\Catan\Client\Temp\bin\Debug\Unity.Analytics.StandardEvents.dll
 F:\Programming\Catan\Client\Temp\bin\Debug\Unity.Analytics.Tracker.dll
-F:\Programming\Catan\Client\Temp\bin\Debug\Unity.CollabProxy.Editor.dll
 F:\Programming\Catan\Client\Temp\bin\Debug\Unity.Locator.dll
 F:\Programming\Catan\Client\Temp\bin\Debug\Unity.PackageManagerUI.Editor.dll
-F:\Programming\Catan\Client\Temp\bin\Debug\Unity.TextMeshPro.dll
-F:\Programming\Catan\Client\Temp\bin\Debug\Unity.TextMeshPro.Editor.dll
 F:\Programming\Catan\Client\Temp\bin\Debug\UnityEditor.dll
 F:\Programming\Catan\Client\Temp\bin\Debug\UnityEngine.AccessibilityModule.dll
-F:\Programming\Catan\Client\Temp\bin\Debug\UnityEngine.Advertisements.dll
 F:\Programming\Catan\Client\Temp\bin\Debug\UnityEngine.AIModule.dll
 F:\Programming\Catan\Client\Temp\bin\Debug\UnityEngine.AnimationModule.dll
 F:\Programming\Catan\Client\Temp\bin\Debug\UnityEngine.ARModule.dll
@@ -1306,10 +1302,7 @@ F:\Programming\Catan\Client\Temp\bin\Debug\Unity.Cecil.Pdb.dll
 F:\Programming\Catan\Client\Temp\bin\Debug\Unity.Cecil.Mdb.dll
 F:\Programming\Catan\Client\Temp\bin\Debug\UnityEngine.xml
 F:\Programming\Catan\Client\Temp\bin\Debug\UnityEditor.xml
-F:\Programming\Catan\Client\Temp\bin\Debug\Unity.TextMeshPro.Editor.pdb
 F:\Programming\Catan\Client\Temp\bin\Debug\Unity.PackageManagerUI.Editor.pdb
-F:\Programming\Catan\Client\Temp\bin\Debug\Unity.TextMeshPro.pdb
-F:\Programming\Catan\Client\Temp\bin\Debug\Unity.CollabProxy.Editor.pdb
 F:\Programming\Catan\Client\Temp\bin\Debug\Unity.Analytics.DataPrivacy.pdb
 F:\Programming\Catan\Client\Temp\bin\Debug\UnityEngine.AIModule.xml
 F:\Programming\Catan\Client\Temp\bin\Debug\UnityEngine.ARModule.xml
@@ -1667,3 +1660,5 @@ G:\Programming\Catan\Client\obj\Debug\Assembly-CSharp.dll
 G:\Programming\Catan\Client\obj\Debug\Assembly-CSharp.pdb
 G:\Programming\Catan\Client\Temp\bin\Debug\TextMeshPro-2017.3-Editor.dll
 G:\Programming\Catan\Client\Temp\bin\Debug\TextMeshPro-2017.3-Runtime.dll
+F:\Programming\Catan\Client\Temp\bin\Debug\TextMeshPro-2017.3-Editor.dll
+F:\Programming\Catan\Client\Temp\bin\Debug\TextMeshPro-2017.3-Runtime.dll

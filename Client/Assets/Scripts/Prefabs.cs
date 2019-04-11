@@ -14,12 +14,15 @@ public static class Prefabs
     public static Dictionary<string, GameObject> Buildings { get; } = new Dictionary<string, GameObject>();
 
     public static Dictionary<Resource, Sprite> ResourceCards = new Dictionary<Resource, Sprite>();
+    public static Dictionary<DevCard, Sprite> DevCards = new Dictionary<DevCard, Sprite>();
     public static Sprite CardBack;
 
     public static GameObject CardPrefab;
     public static GameObject Dice;
     public static GameObject Robber;
     public static GameObject Arrow;
+
+    public static AnimationClip AddDevCard;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     /// <summary>
@@ -30,57 +33,64 @@ public static class Prefabs
         TextInfo myTI = new CultureInfo("en-US", false).TextInfo;
 
         //Color Prebfabs
-        foreach (Object material in Resources.LoadAll("Materials/Colors", typeof(Material)))
+        foreach (Material material in Resources.LoadAll<Material>("Materials/Colors"))
         {
-            Colors[(PlayerColor)System.Enum.Parse(typeof(PlayerColor), myTI.ToTitleCase(material.name.ToLower()))] = (Material)material;
+            Colors[(PlayerColor)System.Enum.Parse(typeof(PlayerColor), myTI.ToTitleCase(material.name.ToLower()))] = material;
         }
         //UI Colors
-        foreach (Object material in Resources.LoadAll("Materials/UI Colors", typeof(Material)))
+        foreach (Material material in Resources.LoadAll<Material>("Materials/UI Colors"))
         {
-            UIColors[(PlayerColor)System.Enum.Parse(typeof(PlayerColor), myTI.ToTitleCase(material.name.ToLower()))] = (Material)material;
+            UIColors[(PlayerColor)System.Enum.Parse(typeof(PlayerColor), myTI.ToTitleCase(material.name.ToLower()))] = material;
         }
         //Transparents
-        foreach (Object material in Resources.LoadAll("Materials/Transparent", typeof(Material)))
+        foreach (Material material in Resources.LoadAll<Material>("Materials/Transparent"))
         {
-            Tranparents[(PlayerColor)System.Enum.Parse(typeof(PlayerColor), myTI.ToTitleCase(material.name.ToLower()))] = (Material)material;
+            Tranparents[(PlayerColor)System.Enum.Parse(typeof(PlayerColor), myTI.ToTitleCase(material.name.ToLower()))] = material;
         }
 
         //Tiles prebfabs
-        foreach (Object tile in Resources.LoadAll("Tiles", typeof(GameObject)))
+        foreach (GameObject tile in Resources.LoadAll<GameObject>("Tiles"))
         {
-            Tiles[tile.name] = (GameObject)tile;
+            Tiles[tile.name] = tile;
         }
 
         //Buildings prefabs
-        foreach (Object building in Resources.LoadAll("Buildings", typeof(GameObject)))
+        foreach (GameObject building in Resources.LoadAll<GameObject>("Buildings"))
         {
-            Buildings[building.name] = (GameObject)building;
+            Buildings[building.name] = building;
         }
 
         //The different Roads rotations prefabs
-        foreach (Object road in Resources.LoadAll("Buildings/Roads", typeof(GameObject)))
+        foreach (GameObject road in Resources.LoadAll<GameObject>("Buildings/Roads"))
         {
-            Roads[road.name] = (GameObject)road;
+            Roads[road.name] = road;
         }
 
         //Single Card Prefab
         CardPrefab = (GameObject)Resources.Load("Cards/Card");
 
         //Resource Cards prefabs
-        foreach (Object card in Resources.LoadAll("Cards/Resources", typeof(Sprite)))
+        foreach (Sprite card in Resources.LoadAll<Sprite>("Cards/Resources"))
         {
-            ResourceCards[(Resource)System.Enum.Parse(typeof(Resource), card.name)] = (Sprite)card;
+            ResourceCards[(Resource)System.Enum.Parse(typeof(Resource), card.name)] = card;
         }
 
-        Texture2D cardBackTexture = (Texture2D)Resources.Load("Cards/CardBack");
+        foreach (Sprite card in Resources.LoadAll<Sprite>("Cards/Development"))
+        {
+            DevCards[(DevCard)System.Enum.Parse(typeof(DevCard), card.name)] = card;
+        }
+
+        Texture2D cardBackTexture = Resources.Load<Texture2D>("Cards/CardBack");
 
         CardBack = Sprite.Create(cardBackTexture, new Rect(0, 0, cardBackTexture.width, cardBackTexture.height), new Vector2(0.5f, 0.5f));
 
-        Dice = (GameObject)Resources.Load("Dice");
+        Dice = Resources.Load<GameObject>("Dice");
 
-        Robber = (GameObject)Resources.Load("Robber");
+        Robber = Resources.Load<GameObject>("Robber");
 
-        Arrow = (GameObject)Resources.Load("Arrow");
+        Arrow = Resources.Load<GameObject>("Arrow");
+
+        AddDevCard = Resources.Load<AnimationClip>("AddDevCard");
 
         Debug.Log("Loaded Prefabs");
     }

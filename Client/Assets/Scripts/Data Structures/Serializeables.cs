@@ -621,11 +621,10 @@ public enum Message
     Cancel,
     PlaceRoad,
     PlaceVillage,
-
     PlaceCity,
     UpgradeToCity,
     BuyCard,
-
+    UseCard,
     Trade,
     ShowOffer,
     ChoosePartner,
@@ -647,4 +646,17 @@ public enum Resource
     Sheep,
     Wheat,
     Wood
+}
+
+public enum DevCard
+{
+    Knight,
+    Monopoly,
+    Plenty,
+    Roads,
+    Point1,
+    Point2,
+    Point3,
+    Point4,
+    Point5
 }

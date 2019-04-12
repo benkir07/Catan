@@ -23,6 +23,7 @@ namespace Catan_Server
         public int RoadsLeft = 15;
         public int VictoryPoints = 0;
         public int SecretPoints = 0;
+        public int KnightsUsed = 0;
 
 
         /// <summary>

@@ -9,7 +9,8 @@ public class PlayerInfo : MonoBehaviour
         Color,
         VictoryPoints,
         CardAmount,
-        DevelopmentCards
+        DevelopmentCards,
+        KnightsUsed
     }
 
     private void Start()
@@ -17,10 +18,17 @@ public class PlayerInfo : MonoBehaviour
         GetInfo(Info.VictoryPoints).SetText("0");
         GetInfo(Info.CardAmount).SetText("0");
         GetInfo(Info.DevelopmentCards).SetText("0");
+        GetInfo(Info.KnightsUsed).SetText("0");
+        LargestArmy(false);
     }
 
     public TextMeshProUGUI GetInfo(Info info)
     {
         return transform.Find(info.ToString()).GetComponent<TextMeshProUGUI>();
+    }
+
+    public void LargestArmy(bool active)
+    {
+        transform.Find("LargestArmy").gameObject.SetActive(active);
     }
 }

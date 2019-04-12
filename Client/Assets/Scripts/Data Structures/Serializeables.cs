@@ -335,6 +335,22 @@ public class SerializableBoard
 
         return places;
     }
+
+    public List<Place> CanMoveRobberTo()
+    {
+        List<Place> tilesCanMoveTo = new List<Place>();
+        for (int col = 1; col < this.Tiles.Length - 1; col++)
+        {
+            for (int row = 1; row < this.Tiles[col].Length - 1; row++)
+            {
+                if (!this.RobberPlace.Equals(new Place(col, row)))
+                {
+                    tilesCanMoveTo.Add(new Place(col, row));
+                }
+            }
+        }
+        return tilesCanMoveTo;
+    }
 }
 
 public class SerializableCross
@@ -628,7 +644,8 @@ public enum Message
     Trade,
     ShowOffer,
     ChoosePartner,
-    TradeSuccess
+    TradeSuccess,
+    Reward
 }
 
 public enum TileTypes

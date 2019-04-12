@@ -644,7 +644,8 @@ public enum Message
     Trade,
     ShowOffer,
     ChoosePartner,
-    TradeSuccess
+    TradeSuccess,
+    Reward
 }
 
 public enum TileTypes

@@ -273,29 +273,36 @@ public class Player : MonoBehaviour
                     }
                     GetInfoObj(color).GetInfo(PlayerInfo.Info.CardAmount).text = GetHand(color).CardAmount.ToString();
 
-                    if (pay == -1) // means we've got another free road
+                    if (state == State.FreeRoadSelected) 
                     {
-                        string works = network.ReadLine();
-                        if (works == Message.Cancel.ToString())
+                        if (pay == -1) // means we've got another free road
                         {
-                            OnScreenText.SetText(network.ReadLine());
-                            break;
-                        }
+                            string works = network.ReadLine();
+                            if (works == Message.Cancel.ToString())
+                            {
+                                OnScreenText.SetText(network.ReadLine());
+                                break;
+                            }
 
-                        List<Place> places = network.Deserialize<List<Place>>();
-                        GameObject visuals = new GameObject("Visuals Parent");
-                        visuals.transform.parent = transform;
-                        foreach (Place place in places)
+                            List<Place> places = network.Deserialize<List<Place>>();
+                            GameObject visuals = new GameObject("Visuals Parent");
+                            visuals.transform.parent = transform;
+                            foreach (Place place in places)
+                            {
+                                VisualizeRoads(board.Crossroads[place], visuals);
+                            }
+
+                            OnScreenText.SetText("Choose a road to build");
+
+                            state = State.FreeRoadVisualized;
+                        }
+                        else
                         {
-                            VisualizeRoads(board.Crossroads[place], visuals);
+                            Canvas.Find("End Button").gameObject.SetActive(true);
+                            Canvas.Find("Build Button").gameObject.SetActive(true);
+                            Canvas.Find("Trade Button").gameObject.SetActive(true);
+                            state = State.MainPhase;
                         }
-
-                        OnScreenText.SetText("Choose a road to build");
-                        Canvas.Find("End Button").gameObject.SetActive(false);
-                        Canvas.Find("Build Button").gameObject.SetActive(false);
-                        Canvas.Find("Trade Button").gameObject.SetActive(false);
-
-                        state = State.FreeRoadVisualized;
                     }
                     break;
                 }
@@ -356,13 +363,14 @@ public class Player : MonoBehaviour
             case Message.PromptDiceRoll:
                 {
                     GetComponent<DiceThrower>().ShowDice();
-                    GameObject button = Canvas.Find("Dice Button").gameObject;
-                    button.SetActive(true);
-                    Button buttonComp = button.GetComponent<Button>();
-                    buttonComp.onClick.AddListener(GetComponent<DiceThrower>().HideDice);
-                    buttonComp.onClick.AddListener(delegate { button.SetActive(false); });
-                    buttonComp.onClick.AddListener(delegate { network.WriteLine("OK"); });
-                    buttonComp.onClick.AddListener(buttonComp.onClick.RemoveAllListeners);
+                    Canvas.Find("Dice Button").gameObject.SetActive(true);
+
+                    string knightAmount = network.ReadLine();
+                    if (knightAmount != "0")
+                    {
+                        OnScreenText.SetText("You have " + knightAmount + " Knight cards\nDo you want to use one of them before rolling the dice?");
+                        Canvas.Find("Use Knight").gameObject.SetActive(true);
+                    }
                     break;
                 }
             case Message.RollDice:
@@ -687,7 +695,9 @@ public class Player : MonoBehaviour
                 {
                     PlayerColor color = (PlayerColor)Enum.Parse(typeof(PlayerColor), network.ReadLine());
                     DevCard card = (DevCard)Enum.Parse(typeof(DevCard), network.ReadLine());
-                    
+                    GetInfoObj(color).GetInfo(PlayerInfo.Info.DevelopmentCards).text = network.ReadLine();
+                    GetInfoObj(color).GetInfo(PlayerInfo.Info.KnightsUsed).text = network.ReadLine();
+
                     if (this.color == color)
                     {
                         devCards.Find(card.ToString()).GetComponent<DevelopmentCard>().UseCard();
@@ -746,7 +756,7 @@ public class Player : MonoBehaviour
                     }
                     else
                     {
-                        OnScreenText.SetText("The " + color + " player has used the " + card + " card");
+                        OnScreenText.SetText("The " + color + " player has used the " + DevelopmentCard.fullNames[card] + " card");
                         GameObject showCard = new GameObject("Visual Card", typeof(SpriteRenderer));
                         showCard.GetComponent<SpriteRenderer>().sprite = Prefabs.DevCards[card];
                         showCard.transform.parent = Canvas;
@@ -756,6 +766,39 @@ public class Player : MonoBehaviour
 
                         Destroy(showCard, 5);
                     }
+                    break;
+                }
+            case Message.Reward:
+                {
+                    string type = network.ReadLine();
+
+                    PlayerColor earner = (PlayerColor)Enum.Parse(typeof(PlayerColor), network.ReadLine());
+                    string victoryPoints = network.ReadLine();
+                    if (secretVictoryPoints != 0 && this.color == earner)
+                        victoryPoints = (int.Parse(victoryPoints) + secretVictoryPoints).ToString();
+                    GetInfoObj(earner).GetInfo(PlayerInfo.Info.VictoryPoints).text = victoryPoints;
+
+                    if (type == "Army")
+                    {
+                        GetInfoObj(earner).LargestArmy(true);
+                        OnScreenText.SetText("The " + earner + " player took the Largest Army reward!");
+                    }
+
+                        string loserColor = network.ReadLine();
+                    if (loserColor != "")
+                    {
+                        PlayerColor loser = (PlayerColor)Enum.Parse(typeof(PlayerColor), loserColor);
+                        victoryPoints = network.ReadLine();
+                        if (secretVictoryPoints != 0 && this.color == loser)
+                            victoryPoints = (int.Parse(victoryPoints) + secretVictoryPoints).ToString();
+                        GetInfoObj(loser).GetInfo(PlayerInfo.Info.VictoryPoints).text = victoryPoints;
+                        if (type == "Army")
+                            GetInfoObj(loser).LargestArmy(false);
+                    }
+
+                    if (type != "Army")
+                        Debug.LogWarning("Do not recognize the " + type + " reward");
+
                     break;
                 }
         }
@@ -890,7 +933,7 @@ public class Player : MonoBehaviour
             }
             Destroy(GameObject.FindGameObjectWithTag("Selected"));
         }
-        if (state == State.BuildSelected || state == State.FreeRoadSelected)
+        if (state == State.BuildSelected)
         {
             Canvas.Find("End Button").gameObject.SetActive(true);
             Canvas.Find("Build Button").gameObject.SetActive(true);

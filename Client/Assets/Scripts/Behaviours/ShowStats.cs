@@ -8,7 +8,7 @@ public class ShowStats : MonoBehaviour, IPointerEnterHandler, IPointerExitHandle
 {
     public static ShowStats instance;
 
-    public List<GameObject> PlayerInfos { get; } = new List<GameObject>();
+    public List<GameObject> PlayerInfos { get; private set; }
 
     private bool HidInfos = false;
 
@@ -31,6 +31,7 @@ public class ShowStats : MonoBehaviour, IPointerEnterHandler, IPointerExitHandle
 
     public void LoadInfos()
     {
+        PlayerInfos = new List<GameObject>();
         foreach (PlayerInfo info in GameObject.FindObjectsOfType<PlayerInfo>())
         {
             PlayerInfos.Add(info.gameObject);

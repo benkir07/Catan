@@ -29,7 +29,7 @@ public class HandManager : MonoBehaviour
     /// <summary>
     /// Runs as the game starts and initializes the Hand.
     /// </summary>
-    public virtual void Start()
+    public virtual void OnEnable()
     {
         CardsInHand = 0;
 

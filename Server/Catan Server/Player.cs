@@ -18,6 +18,7 @@ namespace Catan_Server
         public PlayerColor PlayerColor { get; }
         public List<Resource> resources = new List<Resource>();
         public List<DevCard> devCards = new List<DevCard>();
+        public List<Resource?> ports = new List<Resource?>();
         public int VillagesLeft = 5;
         public int CitiesLeft = 4;
         public int RoadsLeft = 15;

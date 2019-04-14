@@ -9,6 +9,7 @@ public class NumberField : MonoBehaviour
     public int Min = 0;
     public int Max = 9;
     public int CurrentNum = 0;
+    public int jump = 1;
 
     private void Awake()
     {
@@ -23,18 +24,18 @@ public class NumberField : MonoBehaviour
 
     public void Add()
     {
-        if (CurrentNum != Max)
+        if (CurrentNum + jump <= Max)
         {
-            CurrentNum++;
+            CurrentNum += jump;
             numberText.text = CurrentNum.ToString();
         }
     }
 
     public void Dec()
     {
-        if (CurrentNum != Min)
+        if (CurrentNum - jump >= Min)
         {
-            CurrentNum--;
+            CurrentNum -= jump;
             numberText.text = CurrentNum.ToString();
         }
     }

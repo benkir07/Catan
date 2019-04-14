@@ -23,7 +23,7 @@ public class MyHandManager : HandManager
     /// <summary>
     /// Runs as the game starts and initializes the Hand.
     /// </summary>
-    public override void Start()
+    public override void OnEnable()
     {
         canvas = GetComponent<Player>().Canvas;
 

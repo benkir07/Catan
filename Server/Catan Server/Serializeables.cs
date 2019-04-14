@@ -165,7 +165,7 @@ public class SerializableBoard
             }
             isPort = !isPort;
 
-            if (row == 0 && col > 0)
+            if (row == 0 && col != 0)
                 col--;
             else if (col == 0 && row < Tiles[col].Length - 1)
                 row++;
@@ -350,6 +350,28 @@ public class SerializableBoard
             }
         }
         return tilesCanMoveTo;
+    }
+
+    /// <summary>
+    /// Checks if the crossroads can use a port, and what is the port's type.
+    /// </summary>
+    /// <param name="crossroad">The crossroad's position</param>
+    /// <returns>first value is true if it can use a port and false otherwise, second value is the port type or null if it is a generic port</returns>
+    public (bool, Resource?) GetPort(Place crossroad)
+    {
+        Place[] surroundings = SurroundingTiles(crossroad);
+        foreach (Place position in surroundings)
+        {
+            string[] tile = Tiles[position.column][position.row];
+            if (tile[0] == "Port")
+            {
+                if (Enum.TryParse<Resource>(tile[1], out Resource ret))
+                    return (true, ret);
+                else
+                    return (true, null);
+            }
+        }
+        return (false, null);
     }
 }
 
@@ -645,7 +667,9 @@ public enum Message
     ShowOffer,
     ChoosePartner,
     TradeSuccess,
-    Reward
+    Reward,
+    NewPort,
+    SoloTrade
 }
 
 public enum TileTypes

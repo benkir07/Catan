@@ -13,7 +13,7 @@ public class PlayerInfo : MonoBehaviour
         KnightsUsed
     }
 
-    private void Start()
+    private void Awake()
     {
         GetInfo(Info.VictoryPoints).SetText("0");
         GetInfo(Info.CardAmount).SetText("0");

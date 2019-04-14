@@ -105,7 +105,6 @@ namespace Catan_Server
                 }
 
                 /* adds resources to the first player for testing
-                
                 for (int i = 0; i < 5; i++)
                 {
                     for (int j = 0; j < 3; j++)
@@ -168,6 +167,13 @@ namespace Catan_Server
             placer.VictoryPoints++;
             Broadcast(Message.BuildVillage, placer.PlayerColor.ToString(), col.ToString(), row.ToString(), placer.VictoryPoints.ToString(), 0.ToString());
 
+            (bool, Resource?) port = Board.GetPort(new Place(col, row));
+            if (port.Item1)
+            {
+                placer.ports.Add(port.Item2);
+                placer.WriteLine(Message.NewPort.ToString());
+                placer.WriteLine(port.Item2.ToString());
+            }
 
             if (AddResource)
             {
@@ -510,6 +516,14 @@ namespace Catan_Server
                                                 }
                                                 Broadcast(Message.BuildVillage, parameters.ToArray());
 
+                                                (bool, Resource?) port = Board.GetPort(new Place(col, row));
+                                                if (port.Item1)
+                                                {
+                                                    active.ports.Add(port.Item2);
+                                                    active.WriteLine(Message.NewPort.ToString());
+                                                    active.WriteLine(port.Item2.ToString());
+                                                }
+
                                             }
                                         }
                                         break;
@@ -656,8 +670,6 @@ namespace Catan_Server
                                 }
                             }
 
-                            //Thread.Sleep(3000);
-
                             string accepted = "";
                             while (thinking.Count > 0)
                             {
@@ -723,6 +735,82 @@ namespace Catan_Server
                             }
 
                             Broadcast(Message.TradeSuccess, parameters.ToArray());
+                            break;
+                        }
+                    case Message.SoloTrade:
+                        {
+                            string offer = active.ReadLine();
+                            if (offer == "")
+                            {
+                                active.WriteLine(Message.Cancel.ToString());
+                                active.WriteLine("Trade is empty");
+                                break;
+                            }
+                            List<Resource> getting = new List<Resource>();
+                            List<Resource> giving = new List<Resource>();
+                            int giveValue = 0;
+
+                            foreach (string item in offer.Split(','))
+                            {
+                                Resource trading = (Resource)Enum.Parse(typeof(Resource), item.Split(' ')[0]);
+                                int value = int.Parse(item.Split(' ')[1]);
+
+                                if (value > 0) // Getting
+                                {
+                                    for (int i = 0; i < value; i++)
+                                    {
+                                        getting.Add(trading);
+                                    }
+                                }
+                                else // Giving
+                                {
+                                    value = -value;
+                                    for (int i = 0; i < value; i++)
+                                    {
+                                        giving.Add(trading);
+                                    }
+                                    if (active.ports.Contains(trading))
+                                        giveValue += value / 2;
+                                    else if (active.ports.Contains(null))
+                                        giveValue += value / 3;
+                                    else
+                                        giveValue += value / 4;
+                                }
+                            }
+                            if (giving.Count == 0 || getting.Count == 0)
+                            {
+                                active.WriteLine(Message.Cancel.ToString());
+                                active.WriteLine("You must get AND give resources during trade");
+                                break;
+                            }
+                            if (!active.HasResources(giving.ToArray()))
+                            {
+                                active.WriteLine(Message.Cancel.ToString());
+                                active.WriteLine("You do not have those resources");
+                                break;
+                            }
+                            if (giveValue != getting.Count)
+                            {
+                                active.WriteLine(Message.Cancel.ToString());
+                                active.WriteLine("Trade is not legal");
+                                break;
+                            }
+
+                            List<string> parameters = new List<string>() { active.PlayerColor.ToString(), giving.Count.ToString() };
+                            foreach (Resource item in giving)
+                            {
+                                parameters.Add(item.ToString());
+                                active.resources.Remove(item);
+                            }
+                            parameters.Add(getting.Count.ToString());
+                            foreach (Resource item in getting)
+                            {
+                                parameters.Add(item.ToString());
+                                active.resources.Add(item);
+                            }
+                            parameters.Add(active.resources.Count.ToString());
+
+                            Broadcast(Message.SoloTrade, parameters.ToArray());
                             break;
                         }
                     case Message.UseCard:

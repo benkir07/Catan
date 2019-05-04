@@ -29,7 +29,7 @@ public class HandManager : MonoBehaviour
     /// <summary>
     /// Runs as the game starts and initializes the Hand.
     /// </summary>
-    public virtual void OnEnable()
+    public virtual void Start()
     {
         CardsInHand = 0;
 
@@ -86,7 +86,7 @@ public class HandManager : MonoBehaviour
     /// <summary>
     /// Adds a card to the player's hand, with an animation.
     /// </summary>
-    /// <param name="card">The resource of the card</param>
+    /// <param name="card">The resource of the card, or null to a development card</param>
     /// <param name="producing">The origin of the resource (to float the card from)</param>
     public void AddAnimation(Resource? card, Vector3 producing)
     {
@@ -102,7 +102,7 @@ public class HandManager : MonoBehaviour
     /// <summary>
     /// Adds a card to the hand after animation.
     /// </summary>
-    /// <param name="source">The original animated gameobject</param>
+    /// <param name="source">The original animated game object</param>
     protected virtual void AddCard(GameObject source)
     {
         CardsInHand++;

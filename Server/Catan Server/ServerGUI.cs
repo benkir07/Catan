@@ -26,7 +26,7 @@ namespace Catan_Server
         }
         
         /// <summary>
-        /// Initializes the GUI
+        /// Initializes the GUI.
         /// </summary>
         public ServerGUI()
         {
@@ -35,7 +35,8 @@ namespace Catan_Server
         }
 
         /// <summary>
-        /// Runs on GUI startup
+        /// Runs on GUI startup.
+        /// Generated and Called by Windows forms.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -45,7 +46,8 @@ namespace Catan_Server
         }
 
         /// <summary>
-        /// Runs on GUI closing
+        /// Runs on GUI closing.
+        /// Generated and Called by windows forms.
         /// </summary>
         /// <param name="e"></param>
         protected override void OnFormClosing(FormClosingEventArgs e)
@@ -55,12 +57,41 @@ namespace Catan_Server
         }
 
         /// <summary>
-        /// Enters a log to the Log on GUI
+        /// Enters a log to the Log on GUI.
         /// </summary>
         /// <param name="message">The log to enter</param>
         public void EnterLog(string message)
         {
-            this.Invoke(new Action(delegate { this.Log.Items.Add(DateTime.Now.ToLongTimeString() + " " + message); }));
+            try
+            {
+                this.Invoke(new Action(delegate { this.Log.Items.Add(DateTime.Now.ToLongTimeString() + " " + message); }));
+            }
+            catch
+            { }
+        }
+
+        /// <summary>
+        /// Makes all dice results in all games from now on a specific number, set by the gui.
+        /// Generated and Called by Windows forms components.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ResultsButton_Click(object sender, EventArgs e)
+        {
+            Game.results = ((int)Result1.Value, (int)Result2.Value);
+            Result1.Value = 1;
+            Result2.Value = 1;
+        }
+
+        /// <summary>
+        /// Lets the dice results in all games be random again.
+        /// Generated and Called by Windows forms components.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Reset_Click(object sender, EventArgs e)
+        {
+            Game.results = (0, 0);
         }
     }
 }

@@ -1,8 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 
 public class CardsView : MonoBehaviour
 {
@@ -12,20 +9,28 @@ public class CardsView : MonoBehaviour
     private float StartY;
     private Scrollbar scroller;
 
-    private void Awake()
+    /// <summary>
+    /// Initializes the needed variables.
+    /// </summary>
+    private void Start()
     {
         scroller = transform.parent.GetComponentInChildren<Scrollbar>();
         StartY = transform.localPosition.y;
-
-        transform.parent.gameObject.SetActive(false);
     }
 
+    /// <summary>
+    /// Resets the view's values to be able to see the cards from the start when opening next time.
+    /// </summary>
     private void OnDisable()
     {
         scroller.value = 0;
         transform.localPosition = new Vector3(0, StartY);
     }
 
+    /// <summary>
+    /// Scrolls the view.
+    /// Called by UI elements.
+    /// </summary>
     public void Scroll()
     {
         transform.localPosition = new Vector3(-scroller.value * CardOffset * (CardAmount - CardsOnScreen), StartY);

@@ -10,6 +10,7 @@ public class NetworkManager : MonoBehaviour
     private TcpClient ClientSocket { get; } = new TcpClient();
     private StreamReader socketReader;
     private StreamWriter socketWriter;
+    private bool GameStarted = false;
 
     public int Available
     {
@@ -24,50 +25,35 @@ public class NetworkManager : MonoBehaviour
     /// </summary>
     private void Update()
     {
-        if (ClientSocket.Connected && ClientSocket.Available != 0 && !GetComponent<Player>().enabled)
+        if (ClientSocket.Connected && ClientSocket.Available != 0 && !GameStarted)
         {
             if (ReadLine() == "Game Start")
             {
                 GameObject.Find("Wait Message").SetActive(false);
-                GetComponent<Player>().enabled = true;
+                GetComponent<GameManager>().StartGame();
+                GameStarted = true;
             }
         }
     }
 
     /// <summary>
-    /// Runs right before the application closes.
-    /// Closes the connection with the server.
-    /// </summary>
-    void OnApplicationQuit()
-    {
-        try
-        {
-            ClientSocket.Close();
-        }
-        catch
-        {
-
-        }
-    }
-
-    /// <summary>
-    /// Connects to the server using parameters on a UI.
+    /// Connects to the server using parameters on the UI.
     /// Called by UI elements.
     /// </summary>
     public void Connect()
     {
-        Transform canvas = GameObject.Find("Canvas/Connection").transform;
-        string ipString = canvas.Find("IP").GetComponent<TMP_InputField>().text;
+        Transform UI = GameObject.Find("Menu Canvas/Connection").transform;
+        string ipString = UI.Find("IP").GetComponent<TMP_InputField>().text;
         if (!IPAddress.TryParse(ipString, out IPAddress ip))
         {
-            canvas.Find("Errors").GetComponent<TextMeshProUGUI>().text = "IP address invalid.";
+            UI.Find("Errors").GetComponent<TextMeshProUGUI>().text = "IP address invalid.";
             print(ipString);
             return;
         }
-        string portString = canvas.Find("Port").GetComponent<TMP_InputField>().text;
+        string portString = UI.Find("Port").GetComponent<TMP_InputField>().text;
         if (!int.TryParse(portString, out int port))
         {
-            canvas.Find("Errors").GetComponent<TextMeshProUGUI>().text = "Port must be a number.";
+            UI.Find("Errors").GetComponent<TextMeshProUGUI>().text = "Port must be a number.";
             print(portString);
             return;
         }
@@ -83,12 +69,11 @@ public class NetworkManager : MonoBehaviour
         }
         catch
         {
-            canvas.Find("Errors").GetComponent<TextMeshProUGUI>().text = "Could not find server at " + ip + ":" + port + System.Environment.NewLine + "Try another address";
+            UI.Find("Errors").GetComponent<TextMeshProUGUI>().text = "Could not find server at " + ip + ":" + port + System.Environment.NewLine + "Try another address";
             return;
         }
 
-        canvas.gameObject.SetActive(false);
-        GameObject.Find("Canvas").transform.Find("Game").gameObject.SetActive(true);
+        GameObject.Find("Menu Canvas").SetActive(false);
     }
 
     /// <summary>
@@ -108,7 +93,6 @@ public class NetworkManager : MonoBehaviour
     {
         string data = socketReader.ReadLine();
         socketWriter.WriteLine("Got it");
-        //print(data);
         return data;
     }
 
@@ -122,11 +106,33 @@ public class NetworkManager : MonoBehaviour
         XmlSerializer serializer = new XmlSerializer(typeof(T));
 
         int len = int.Parse(ReadLine());
+
         char[] xmlString = new char[len];
-        socketReader.Read(xmlString, 0, len);
+        int read = 0;
+        while (read < len)
+        {
+            read += socketReader.Read(xmlString, read, len - read);
+        }
         socketWriter.WriteLine("V");
 
         StringReader xml = new StringReader(new string(xmlString));
         return (T)serializer.Deserialize(xml);
     }
+
+    /// <summary>
+    /// Runs right before the application closes.
+    /// Closes the connection with the server.
+    /// </summary>
+    public void OnApplicationQuit()
+    {
+        try
+        {
+            ClientSocket.Close();
+        }
+        catch
+        {
+
+        }
+    }
+
 }

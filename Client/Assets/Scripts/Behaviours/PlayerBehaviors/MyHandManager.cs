@@ -23,9 +23,9 @@ public class MyHandManager : HandManager
     /// <summary>
     /// Runs as the game starts and initializes the Hand.
     /// </summary>
-    public override void OnEnable()
+    public override void Start()
     {
-        canvas = GetComponent<Player>().Canvas;
+        canvas = GetComponent<GameManager>().Canvas;
 
         HandPos = Prefabs.CardPrefab.transform.localPosition;
 
@@ -98,7 +98,7 @@ public class MyHandManager : HandManager
     /// <summary>
     /// Adds a card to the hand after animation.
     /// </summary>
-    /// <param name="source">The original animated gameobject</param>
+    /// <param name="source">The original animated game object</param>
     protected override void AddCard(GameObject source)
     {
         string resourceName = source.GetComponent<SpriteRenderer>().sprite.name;
@@ -170,7 +170,7 @@ public class MyHandManager : HandManager
                 vx.Find("X").gameObject.SetActive(true);
                 vx.gameObject.SetActive(false);
                 V.onClick.RemoveAllListeners();
-                V.onClick.AddListener(GetComponent<Player>().ConfirmPlace);
+                V.onClick.AddListener(GetComponent<GameManager>().ConfirmPlace);
             }
             else
             {

@@ -150,7 +150,7 @@ public class Crossroads : SerializableCross
     public override void BuildVillage(PlayerColor color)
     {
         base.BuildVillage(color);
-        Building = GameObject.Instantiate(Prefabs.Buildings["Village"], Object.FindObjectOfType<Player>().transform);
+        Building = GameObject.Instantiate(Prefabs.Buildings["Village"], Object.FindObjectOfType<GameManager>().transform);
         Building.transform.position += Offset;
         Building.GetComponentInChildren<Renderer>().material = Prefabs.Colors[color];
     }
@@ -162,7 +162,7 @@ public class Crossroads : SerializableCross
     {
         base.UpgradeToCity();
         GameObject.Destroy(Building);
-        Building = GameObject.Instantiate(Prefabs.Buildings["City"], Object.FindObjectOfType<Player>().transform);
+        Building = GameObject.Instantiate(Prefabs.Buildings["City"], Object.FindObjectOfType<GameManager>().transform);
         Building.transform.position += Offset;
         Building.GetComponentInChildren<Renderer>().material = Prefabs.Colors[(PlayerColor)PlayerColor];
     }

@@ -66,7 +66,7 @@ public class Road : SerializableRoad
         if (this.PlayerColor != null)
             throw new System.Exception("Cannot visalize a Building with a Building on it.");
 
-        GameObject visual = GameObject.Instantiate(Prefabs.Roads[this.Type.ToString()], Object.FindObjectOfType<Player>().transform);
+        GameObject visual = GameObject.Instantiate(Prefabs.Roads[this.Type.ToString()], Object.FindObjectOfType<GameManager>().transform);
         visual.transform.position += offset;
 
         visual.GetComponentInChildren<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
@@ -83,7 +83,7 @@ public class Road : SerializableRoad
     public override void Build(PlayerColor color)
     {
         base.Build(color);
-        Building = GameObject.Instantiate(Prefabs.Roads[Type.ToString()], Object.FindObjectOfType<Player>().transform);
+        Building = GameObject.Instantiate(Prefabs.Roads[Type.ToString()], Object.FindObjectOfType<GameManager>().transform);
         Building.transform.position += offset;
         Building.GetComponentInChildren<Renderer>().material = Prefabs.Colors[color];
     }

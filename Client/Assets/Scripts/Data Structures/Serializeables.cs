@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 public struct Place
 {
@@ -29,8 +30,6 @@ public class SerializableBoard
     public const int MainColumn = 5;
     public const int SmallColumn = 3;
     public const int portAmount = 9;
-
-    private static Random random = new Random();
 
     #region Amounts To Place "Constants"
     public static int[] portAngels = { 0, 60, 60, 120, 180, 180, 240, 300, 300 };
@@ -68,6 +67,8 @@ public class SerializableBoard
         };
     #endregion
 
+    private static Random random = new Random();
+
     public string[][][] Tiles;
     public SerializableCross[][] Crossroads;
     public Place RobberPlace;
@@ -76,7 +77,7 @@ public class SerializableBoard
     /// Randomizes a key with a nonzero value.
     /// </summary>
     /// <param name="dict">Dictionary to choose a key from</param>
-    /// <returns>Random key with nonzero value</returns>
+    /// <returns>A random key with nonzero value</returns>
     static string GetRandomKey(Dictionary<string, int> dict)
     {
         List<string> tilesNames = new List<string>(dict.Keys);
@@ -180,7 +181,7 @@ public class SerializableBoard
     }
 
     /// <summary>
-    /// Helper function that creates all Crossroads.
+    /// Creates all crossroads objects.
     /// </summary>
     private void GenerateCrossroads()
     {
@@ -223,7 +224,7 @@ public class SerializableBoard
     /// <summary>
     /// Gets all the resource tiles with a specific number on them.
     /// </summary>
-    /// <param name="num">The number to look for on the tile</param>
+    /// <param name="num">The number to look for on the tiles</param>
     /// <returns>List of places of the tiles</returns>
     public List<Place> GetTilesOfNum(int num)
     {
@@ -244,10 +245,10 @@ public class SerializableBoard
     }
 
     /// <summary>
-    /// Gets the Crossroads surrounding a tile.
+    /// Gets the crossroads surrounding a tile.
     /// </summary>
     /// <param name="tile">The place of the tile</param>
-    /// <returns>All six Crossroads surrounding the tile</returns>
+    /// <returns>All six crossroads surrounding the tile</returns>
     public SerializableCross[] SurroundingCrossroads(Place tile)
     {
         SerializableCross[] surrounding = new SerializableCross[6];
@@ -295,7 +296,8 @@ public class SerializableBoard
     /// Checks which crossroads the player of a color can build in.
     /// </summary>
     /// <param name="color">The player's color</param>
-    /// <param name="needRoadLink">Boolean whether or not a roadway connection to the crossroad is needed (default is true because a connection is needed at all times but the first two placements)</param>
+    /// <param name="checkDistance">Whether or not to check distance from villages for the sake of placing</param>
+    /// <param name="needRoadLink">Whether or not a roadway connection to the crossroad is needed (default is true because a connection is needed at all times but the first two placements)</param>
     /// <returns>The places where the player can build villages</returns>
     public List<Place> PlacesCanBuild(PlayerColor color, bool checkDistance, bool needRoadLink = true)
     {
@@ -317,7 +319,13 @@ public class SerializableBoard
         return ableToBuild;
     }
 
-    public List<Place> VillagesOfColor(PlayerColor color)
+    /// <summary>
+    /// Gets all crossroads where there is a building of a certain color.
+    /// </summary>
+    /// <param name="color">The color to look for</param>
+    /// <param name="onlyVillages">Whether to check only for villages, or for cities too</param>
+    /// <returns>The places of the crossroads</returns>
+    public List<Place> CrossroadsOfColor(PlayerColor color, bool onlyVillages)
     {
         List<Place> places = new List<Place>();
 
@@ -326,7 +334,7 @@ public class SerializableBoard
             for (int row = 0; row < Crossroads[col].Length; row++)
             {
                 SerializableCross cross = Crossroads[col][row];
-                if (cross.PlayerColor == color && cross.IsCity == false)
+                if (cross.PlayerColor == color && (!onlyVillages || cross.IsCity == false))
                 {
                     places.Add(new Place(col, row));
                 }
@@ -336,6 +344,10 @@ public class SerializableBoard
         return places;
     }
 
+    /// <summary>
+    /// Gets all places where the robber can be moved to.
+    /// </summary>
+    /// <returns>The places of the tiles the robber can be moved to</returns>
     public List<Place> CanMoveRobberTo()
     {
         List<Place> tilesCanMoveTo = new List<Place>();
@@ -356,7 +368,8 @@ public class SerializableBoard
     /// Checks if the crossroads can use a port, and what is the port's type.
     /// </summary>
     /// <param name="crossroad">The crossroad's position</param>
-    /// <returns>first value is true if it can use a port and false otherwise, second value is the port type or null if it is a generic port</returns>
+    /// <returns>bool - true if it can use a port and false otherwise
+    /// Resource? - the port type or null if it is a generic port</returns>
     public (bool, Resource?) GetPort(Place crossroad)
     {
         Place[] surroundings = SurroundingTiles(crossroad);
@@ -372,6 +385,111 @@ public class SerializableBoard
             }
         }
         return (false, null);
+    }
+
+    /// <summary>
+    /// Calculates the longest road of a color on board.
+    /// </summary>
+    /// <param name="color">The road's color</param>
+    /// <returns>The longest road's length</returns>
+    public int LongestRoad(PlayerColor color)
+    {
+        List<Place> starts = CrossroadsOfColor(color, false);
+
+        int longest = LongestRoad(color, starts[0], starts);
+        while (starts.Count != 0)
+        {
+            longest = Math.Max(LongestRoad(color, starts[0], starts), longest);
+        }
+        return longest;
+    }
+    /// <summary>
+    /// Finds the longest road of a color from a starting crossroad.
+    /// </summary>
+    /// <param name="color">The road's color</param>
+    /// <param name="start">The place of the crossroad to start counting from, must be connected by road of the chosen color</param>
+    /// <param name="notChecked">The places of crossroads we might want to check later, the function removes the ones it checks</param>
+    /// <returns>The longest road's length</returns>
+    private int LongestRoad(PlayerColor color, Place start, List<Place> notChecked)
+    {
+        notChecked.Remove(start);
+        List<SerializableRoad> _checked = new List<SerializableRoad>();
+        List<SerializableRoad>[] longRoads = new List<SerializableRoad>[3];
+        int index = 0;
+        SerializableCross _start = Crossroads[start.column][start.row];
+        foreach (SerializableRoad[] arr in _start.Roads)
+        {
+            foreach (SerializableRoad item in arr)
+            {
+                if (item != null && item.PlayerColor == color && !_checked.Contains(item))
+                {
+                    longRoads[index] = LongestRoad(color, item, item.GetOtherCross(_start), notChecked, _checked);
+                    index++;
+                }
+            }
+        }
+        if (index == 1)
+            return longRoads[0].Count;
+        else if (index == 2)
+            return longRoads[0].Union(longRoads[1]).Count();
+        else
+        {
+            int maxIndex = 0;
+            for (int i = 1; i < 3; i++)
+            {
+                if (longRoads[i].Count > longRoads[maxIndex].Count)
+                    maxIndex = i;
+            }
+
+            int ret = 0;
+            for (int i = 0; i < 3; i++)
+            {
+                if (i != maxIndex)
+                    ret = Math.Max(longRoads[maxIndex].Union(longRoads[i]).Count(), ret);
+            }
+            return ret;
+        }
+    }
+    /// <summary>
+    /// Recursive function.
+    /// Finds the longest road of a color in a direction.
+    /// </summary>
+    /// <param name="color">The road's color</param>
+    /// <param name="curr">The current road</param>
+    /// <param name="to">The crossroad to continue onto</param>
+    /// <param name="notChecked">The places of crossroads we might want to check later, the function removes the ones it checks</param>
+    /// <param name="_checked">The roads already checked, to prevent infinite recursion</param>
+    /// <returns>All of the roads taking part in said long road</returns>
+    private List<SerializableRoad> LongestRoad(PlayerColor color, SerializableRoad curr, SerializableCross to, List<Place> notChecked, List<SerializableRoad> _checked)
+    {
+        notChecked.Remove(to.place);
+        _checked.Add(curr);
+
+        SerializableRoad[] con = curr.Continues(to, _checked);
+        if (con.Length == 0)
+            return new List<SerializableRoad> { curr };
+        else if (con.Length == 1)
+        {
+            List<SerializableRoad> ret = LongestRoad(color, con[0], con[0].GetOtherCross(to), notChecked, _checked);
+            ret.Add(curr);
+            return ret;
+        }
+        else
+        {
+            List<SerializableRoad> path1 = LongestRoad(color, con[0], con[0].GetOtherCross(to), notChecked, _checked.ToList());
+            List<SerializableRoad> path2 = LongestRoad(color, con[1], con[1].GetOtherCross(to), notChecked, _checked.ToList());
+
+            if (path1.Count > path2.Count)
+            {
+                path1.Add(curr);
+                return path1;
+            }
+            else
+            {
+                path2.Add(curr);
+                return path2;
+            }
+        }
     }
 }
 
@@ -527,10 +645,6 @@ public class SerializableCross
             {
                 if (road != null)
                 {
-                    if (road.PlayerColor != null)
-                    {
-                        Console.WriteLine();
-                    }
                     if (road.PlayerColor == PlayerColor)
                     {
                         return true;
@@ -627,6 +741,28 @@ public class SerializableRoad
             throw new Exception(this.ToString() + " already built");
         this.PlayerColor = PlayerColor;
     }
+
+    /// <summary>
+    /// Gets the roads continuing the current road with the same color.
+    /// </summary>
+    /// <param name="to">The cross to check the continues of, must be one of the sides of the road</param>
+    /// <param name="notIncluding">The roads to not include in the continue count, used to prevent infinite recursion</param>
+    /// <returns>Array of the different continue options</returns>
+    public SerializableRoad[] Continues(SerializableCross to, List<SerializableRoad> notIncluding = null)
+    {
+        if (to != _leftCross && to != _rightCross)
+            throw new Exception(to + " invalid 'to' variable");
+        List<SerializableRoad> ret = new List<SerializableRoad>();
+        foreach (SerializableRoad[] arr in to.Roads)
+        {
+            foreach (SerializableRoad item in arr)
+            {
+                if (item != null && item.PlayerColor == this.PlayerColor && item != this && notIncluding != null && !notIncluding.Contains(item))
+                    ret.Add(item);
+            }
+        }
+        return ret.ToArray();
+    }
 }
 
 public enum PlayerColor
@@ -669,7 +805,8 @@ public enum Message
     TradeSuccess,
     Reward,
     NewPort,
-    SoloTrade
+    SoloTrade,
+    Win
 }
 
 public enum TileTypes
@@ -700,4 +837,13 @@ public enum DevCard
     Point3,
     Point4,
     Point5
+}
+
+public enum WinCon
+{
+    Village,
+    City,
+    RoadsAward,
+    ArmyAward,
+    VictoryCard
 }

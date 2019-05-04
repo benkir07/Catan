@@ -74,7 +74,7 @@ public class DiceThrower : MonoBehaviour
                     Rolling = false;
                     if (result == 7)
                     {
-                        GetComponent<Player>().OnScreenText.SetText("Waiting for other players to discard half the cards in their hand");
+                        GetComponent<GameManager>().OnScreenText.SetText("Waiting for other players to discard half the cards in their hand");
                     }
                 }
             }

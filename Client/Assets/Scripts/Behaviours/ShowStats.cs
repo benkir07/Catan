@@ -4,41 +4,28 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class ShowStats : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+public class ShowStats : MonoBehaviour
 {
     public static ShowStats instance;
+    public List<GameObject> PlayerInfos { get; private set; } = new List<GameObject>();
 
-    public List<GameObject> PlayerInfos { get; private set; }
-
-    private bool HidInfos = false;
-
+    /// <summary>
+    /// Finds and keeps the different info objects.
+    /// </summary>
     private void Awake()
     {
         instance = this;
-    }
-
-    private void Update()
-    {
-        if (!HidInfos)
-        {
-            foreach (GameObject info in PlayerInfos)
-            {
-                info.SetActive(false);
-            }
-            HidInfos = true;
-        }
-    }
-
-    public void LoadInfos()
-    {
-        PlayerInfos = new List<GameObject>();
         foreach (PlayerInfo info in GameObject.FindObjectsOfType<PlayerInfo>())
         {
             PlayerInfos.Add(info.gameObject);
         }
+        gameObject.SetActive(false);
     }
 
-    public void OnPointerEnter(PointerEventData eventData)
+    /// <summary>
+    /// Activates the info objects.
+    /// </summary>
+    private void OnMouseEnter()
     {
         GetComponent<Image>().color = new Color32(200, 200, 200, 255);
         foreach (GameObject info in PlayerInfos)
@@ -47,7 +34,10 @@ public class ShowStats : MonoBehaviour, IPointerEnterHandler, IPointerExitHandle
         }
     }
 
-    public void OnPointerExit(PointerEventData eventData)
+    /// <summary>
+    /// Hides the info objects.
+    /// </summary>
+    private void OnMouseExit()
     {
         GetComponent<Image>().color = Color.white;
         foreach (GameObject info in PlayerInfos)

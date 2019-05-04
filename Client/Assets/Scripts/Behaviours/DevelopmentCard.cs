@@ -17,23 +17,21 @@ public class DevelopmentCard : MonoBehaviour
         { DevCard.Point4, "Library"},
         { DevCard.Point5, "Chapel"}
     };
-
-    private static Transform AreYouSure = null;
     private static Color32 HasThisCard = new Color32(255, 255, 255, 255);
     private static Color32 Selected = new Color32(240, 240, 240, 255);
     private static Color32 DoesntHaveThisCard = new Color32(100, 100, 100, 255);
 
+    private static DevCardDialogue AreYouSure = null;
     private SpriteRenderer image;
     private int Amount = 0;
     private TextMeshProUGUI AmountText;
 
+    /// <summary>
+    /// Initializes the needed variables.
+    /// </summary>
     private void Awake()
     {
-        if (AreYouSure == null)
-        {
-            AreYouSure = transform.parent.parent.GetComponentInChildren<DevCardDialouge>().transform;
-            AreYouSure.gameObject.SetActive(false);
-        }
+        AreYouSure = transform.parent.parent.GetComponentInChildren<DevCardDialogue>();
 
         image = GetComponent<SpriteRenderer>();
         AmountText = GetComponentInChildren<TextMeshProUGUI>();
@@ -45,6 +43,9 @@ public class DevelopmentCard : MonoBehaviour
             image.color = HasThisCard;
     }
 
+    /// <summary>
+    /// Add one more of the card.
+    /// </summary>
     public void AddCard()
     {
         Amount++;
@@ -54,6 +55,10 @@ public class DevelopmentCard : MonoBehaviour
             image.color = HasThisCard;
     }
 
+    /// <summary>
+    /// Reduces one of the card.
+    /// </summary>
+    /// <returns>returns false if did not have the card, and true if did</returns>
     public bool UseCard()
     {
         if (Amount == 0)
@@ -71,23 +76,32 @@ public class DevelopmentCard : MonoBehaviour
         return true;
     }
 
+    /// <summary>
+    /// Changes the image's state to selected.
+    /// </summary>
     private void OnMouseEnter()
     {
         if (Amount != 0)
             image.color = Selected;
     }
 
+    /// <summary>
+    /// Changes the image's state to unselected.
+    /// </summary>
     private void OnMouseExit()
     {
         if (Amount != 0)
             image.color = HasThisCard;
     }
 
+    /// <summary>
+    /// Shows up an "Are you sure?" dialogue for using the card.
+    /// </summary>
     private void OnMouseUpAsButton()
     {
         if (Amount != 0)
         {
-            AreYouSure.GetComponent<DevCardDialouge>().ShowDialouge((DevCard)Enum.Parse(typeof(DevCard), this.name));
+            AreYouSure.ShowDialouge((DevCard)Enum.Parse(typeof(DevCard), this.name));
         }
     }
 }

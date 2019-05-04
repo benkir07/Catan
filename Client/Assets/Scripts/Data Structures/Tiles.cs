@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using TMPro;
 using System;
-using System.Collections.Generic;
 
 public class Tile
 {
@@ -36,7 +35,7 @@ public class Tile
         {
             Vector3 offset = CalculateOffset(Column, Row);
 
-            GameObject = GameObject.Instantiate(Prefabs.Tiles[modelName], UnityEngine.Object.FindObjectOfType<Player>().transform);
+            GameObject = GameObject.Instantiate(Prefabs.Tiles[modelName], UnityEngine.Object.FindObjectOfType<GameManager>().transform);
             GameObject.transform.position += offset;
         }
         else

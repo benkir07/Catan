@@ -4,24 +4,28 @@ using System.Linq;
 using System.Collections.Generic;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.SceneManagement;
 
-public class Player : MonoBehaviour
+public class GameManager : MonoBehaviour
 {
+    public Transform Canvas;
+    public TextMeshProUGUI OnScreenText;
     private NetworkManager network;
-    private MyHandManager cardsInHand;
-    private HandManager[] otherHands;
     private DiceThrower dice;
-
+    private Transform devCardsMenu;
+    private HandManager[] cardsInHands;
     private PlayerInfo[] infos;
 
     private PlayerColor color;
     private Board board;
+
     private enum State
     {
         StartVisualized,
         StartSelected,
         RobberVisualized,
         RobberSelected,
+
         MainPhase,
         BuildVisualized,
         BuildSelected,
@@ -30,34 +34,27 @@ public class Player : MonoBehaviour
         FreeCard
     }
     private State? state = null;
-    public Transform Canvas;
-    public TextMeshProUGUI OnScreenText;
-    private Transform devCards;
 
     private int secretVictoryPoints = 0;
 
-    private void Awake()
+    /// <summary>
+    /// Runs as the program starts.
+    /// Initializes the player's variables.
+    /// </summary>
+    private void Start()
     {
         network = GetComponent<NetworkManager>();
         dice = GetComponent<DiceThrower>();
-        cardsInHand = GetComponent<MyHandManager>();
 
-        otherHands = new HandManager[3];
-        for (int i = 1; i < 4; i++)
-        {
-            otherHands[i - 1] = GameObject.Find("NextPlayer" + i).GetComponent<HandManager>();
-        }
-    }
-
-    /// <summary>
-    /// Runs as the game starts.
-    /// Initializes the player's variables.
-    /// </summary>
-    private void OnEnable()
-    {
-        Canvas = GameObject.Find("Canvas/Game").transform;
+        Canvas = GameObject.Find("Game Canvas").transform;
         OnScreenText = Canvas.Find("Message").GetComponent<TextMeshProUGUI>();
-        devCards = Canvas.Find("Development Cards/Cards");
+        devCardsMenu = Canvas.Find("Development Cards/Cards");
+
+        cardsInHands = new HandManager[4];
+        for (int i = 0; i < 4; i++)
+        {
+            cardsInHands[i] = GameObject.Find("NextPlayer" + i).GetComponent<HandManager>();
+        }
 
         infos = new PlayerInfo[4];
         for (int i = 0; i < 4; i++)
@@ -65,17 +62,17 @@ public class Player : MonoBehaviour
             infos[i] = Canvas.Find("PlayersInfo/NextPlayer" + i).GetComponent<PlayerInfo>();
         }
 
-        dice.enabled = true;
-        cardsInHand.enabled = true;
+        Canvas.Find("V or X/V").GetComponent<Button>().onClick.AddListener(ConfirmPlace);
+    }
 
+    /// <summary>
+    /// Initializes more of the player's variables that could be initialized only as the game starts.
+    /// </summary>
+    public void StartGame()
+    {
         Canvas.Find("Turns").gameObject.SetActive(true);
-        Canvas.Find("PlayersInfo").gameObject.SetActive(true);
-        ShowStats.instance.LoadInfos();
-
-        Canvas.Find("V or X/V").GetComponent<Button>().onClick.AddListener(GetComponent<Player>().ConfirmPlace);
 
         color = (PlayerColor)Enum.Parse(typeof(PlayerColor), network.ReadLine());
-        int playerAmount = int.Parse(network.ReadLine());
 
         Transform buildPanel = Canvas.Find("Build Panel");
         for (int i = 0; i < buildPanel.childCount; i++)
@@ -87,20 +84,21 @@ public class Player : MonoBehaviour
             }
         }
 
-        // Sets each info's color label to its relevant value, depending on our color.
-        // Disables not needed infos.
+        int playerAmount = int.Parse(network.ReadLine());
+
+        ShowStats.instance.gameObject.SetActive(true);
         foreach (PlayerColor color in Enum.GetValues(typeof(PlayerColor)))
         {
-            if ((int)color < playerAmount) // Checks if the player color is playing
+            if ((int)color < playerAmount)
             {
-                TextMeshProUGUI colorText = GetInfoObj(color).GetInfo(PlayerInfo.Info.Color);
+                TextMeshProUGUI colorText = GetObj(infos, color).GetInfo(PlayerInfo.Info.Color);
                 colorText.SetText(color.ToString());
                 colorText.color = Prefabs.Colors[color].color;
             }
-            else // Disables the showing of not needed info objects.
+            else
             {
-                ShowStats.instance.PlayerInfos.Remove(GetInfoObj(color).gameObject);
-                GetInfoObj(color).gameObject.SetActive(false);
+                ShowStats.instance.PlayerInfos.Remove(GetObj(infos, color).gameObject);
+                GetObj(infos, color).gameObject.SetActive(false);
             }
         }
 
@@ -113,7 +111,7 @@ public class Player : MonoBehaviour
     /// </summary>
     private void Update()
     {
-        if (network.Available > 0 && !GetComponent<DiceThrower>().Rolling)
+        if (network.enabled && network.Available > 0 && !GetComponent<DiceThrower>().Rolling)
         {
             string data = network.ReadLine();
             if (Enum.TryParse(data, out Message message))
@@ -201,8 +199,14 @@ public class Player : MonoBehaviour
         {
             case Message.Disconnect:
                 {
-                    print("Disconnected!");
                     network.WriteLine("V");
+                    string reason = network.ReadLine();
+                    if (reason != "")
+                    {
+                        Transform error = Canvas.Find("Error");
+                        error.gameObject.SetActive(true);
+                        error.Find("Reason").GetComponent<TextMeshProUGUI>().text = reason;
+                    }
                     break;
                 }
             case Message.NewTurn:
@@ -210,6 +214,7 @@ public class Player : MonoBehaviour
                     PlayerColor playerColor = (PlayerColor)Enum.Parse(typeof(PlayerColor), network.ReadLine());
                     Canvas.Find("Turns").gameObject.GetComponent<TextMeshProUGUI>().SetText(playerColor.ToString() + " Player's Turn");
                     Canvas.Find("Turns/Image").gameObject.GetComponent<Image>().color = Prefabs.Colors[playerColor].color;
+                    state = null;
 
                     OnScreenText.SetText("");
                     break;
@@ -225,88 +230,7 @@ public class Player : MonoBehaviour
             case Message.BuildVillage:
             case Message.BuildRoad:
                 {
-                    PlayerColor color = (PlayerColor)Enum.Parse(typeof(PlayerColor), network.ReadLine());
-                    int col = int.Parse(network.ReadLine());
-                    int row = int.Parse(network.ReadLine());
-                    Crossroads crossroad = board.Crossroads[new Place(col, row)];
-
-                    Vector3 payTo = Vector3.zero;
-                    if (message == Message.BuildVillage)
-                    {
-                        string victoryPoints = network.ReadLine();
-
-                        crossroad.BuildVillage(color);
-
-                        payTo = crossroad.Building.transform.position;
-
-                        if (secretVictoryPoints != 0 && this.color == color)
-                            victoryPoints = (int.Parse(victoryPoints) + secretVictoryPoints).ToString();
-                        GetInfoObj(color).GetInfo(PlayerInfo.Info.VictoryPoints).text = victoryPoints;
-
-                        if (state == State.StartSelected)
-                        {
-                            GameObject visuals = new GameObject("Visuals Parent");
-                            visuals.transform.parent = transform;
-                            VisualizeRoads(crossroad, visuals);
-                            OnScreenText.SetText("Choose a direction to start off your road");
-                            state = State.StartVisualized;
-                        }
-                    }
-                    else if (message == Message.BuildRoad)
-                    {
-                        int rightLeft = int.Parse(network.ReadLine());
-                        int upDown = int.Parse(network.ReadLine());
-
-                        crossroad.Roads[rightLeft][upDown].Build(color);
-
-                        payTo = crossroad.Roads[rightLeft][upDown].Building.transform.position;
-
-                        if (state == State.StartSelected)
-                        {
-                            state = null;
-                        }
-                    }
-
-                    int pay = int.Parse(network.ReadLine());
-
-                    for (int i = 0; i < pay; i++)
-                    {
-                        Resource resource = (Resource)Enum.Parse(typeof(Resource), network.ReadLine());
-                        GetHand(color).DiscardAnimation(resource, payTo);
-                    }
-                    GetInfoObj(color).GetInfo(PlayerInfo.Info.CardAmount).text = GetHand(color).CardAmount.ToString();
-
-                    if (state == State.FreeRoadSelected) 
-                    {
-                        if (pay == -1) // means we've got another free road
-                        {
-                            string works = network.ReadLine();
-                            if (works == Message.Cancel.ToString())
-                            {
-                                OnScreenText.SetText(network.ReadLine());
-                                break;
-                            }
-
-                            List<Place> places = network.Deserialize<List<Place>>();
-                            GameObject visuals = new GameObject("Visuals Parent");
-                            visuals.transform.parent = transform;
-                            foreach (Place place in places)
-                            {
-                                VisualizeRoads(board.Crossroads[place], visuals);
-                            }
-
-                            OnScreenText.SetText("Choose a road to build");
-
-                            state = State.FreeRoadVisualized;
-                        }
-                        else
-                        {
-                            Canvas.Find("End Button").gameObject.SetActive(true);
-                            Canvas.Find("Build Button").gameObject.SetActive(true);
-                            Canvas.Find("Trade Button").gameObject.SetActive(true);
-                            state = State.MainPhase;
-                        }
-                    }
+                    BuildMessages(message);
                     break;
                 }
             case Message.AddResource:
@@ -316,24 +240,7 @@ public class Player : MonoBehaviour
                     int row = int.Parse(network.ReadLine());
                     Resource resource = (Resource)Enum.Parse(typeof(Resource), network.ReadLine());
 
-                    Vector3 getFrom = Vector3.zero;
-
-                    if (state == State.FreeCard)
-                    {
-                        getFrom = GameObject.Find("Development Cards").transform.position;
-                        Canvas.Find("Resources").gameObject.SetActive(true);
-                        OnScreenText.SetText("Choose another resource to get");
-                        state = State.MainPhase;
-                    }
-                    else if (col == -1)
-                        getFrom = GameObject.Find("Development Cards").transform.position;
-                    else
-                        getFrom = board.Tiles[new Place(col, row)].GameObject.transform.position;
-
-                    GetHand(player).AddAnimation(resource, getFrom);
-
-                    int cardsInHand = GetHand(player).CardAmount + GetHand(player).AnimatedCards;
-                    GetInfoObj(player).GetInfo(PlayerInfo.Info.CardAmount).text = cardsInHand.ToString();
+                    AddResource(player, resource, col, row);
                     break;
                 }
             case Message.Discard:
@@ -343,9 +250,9 @@ public class Player : MonoBehaviour
                     if (player == this.color && GetComponent<MyHandManager>().CardsToDiscard == 0)
                         OnScreenText.SetText("Waiting for other players to discard half the cards in their hand");
 
-                    GetHand(player).DiscardAnimation(resource, board.Robber.transform.position);
+                    GetObj(cardsInHands, player).DiscardAnimation(resource, board.Robber.transform.position);
 
-                    GetInfoObj(player).GetInfo(PlayerInfo.Info.CardAmount).text = GetHand(player).CardAmount.ToString();
+                    GetObj(infos, player).GetInfo(PlayerInfo.Info.CardAmount).text = GetObj(cardsInHands, player).CardAmount.ToString();
                     break;
                 }
             case Message.Steal:
@@ -354,13 +261,13 @@ public class Player : MonoBehaviour
                     PlayerColor thief = (PlayerColor)Enum.Parse(typeof(PlayerColor), network.ReadLine());
                     Resource resource = (Resource)Enum.Parse(typeof(Resource), network.ReadLine());
 
-                    HandManager victimHand = GetHand(victim);
+                    HandManager victimHand = GetObj(cardsInHands, victim);
                     victimHand.Discard(resource);
-                    GetInfoObj(victim).GetInfo(PlayerInfo.Info.CardAmount).text = GetHand(victim).CardAmount.ToString();
+                    GetObj(infos, victim).GetInfo(PlayerInfo.Info.CardAmount).text = GetObj(cardsInHands, victim).CardAmount.ToString();
 
-                    GetHand(thief).AddAnimation(resource, victimHand.transform.position + victimHand.HandPos);
-                    int cardsInHand = GetHand(thief).CardAmount + GetHand(thief).AnimatedCards;
-                    GetInfoObj(thief).GetInfo(PlayerInfo.Info.CardAmount).text = cardsInHand.ToString();
+                    GetObj(cardsInHands, thief).AddAnimation(resource, victimHand.transform.position + victimHand.HandPos);
+                    int cardsInHand = GetObj(cardsInHands, thief).CardAmount + GetObj(cardsInHands, thief).AnimatedCards;
+                    GetObj(infos, thief).GetInfo(PlayerInfo.Info.CardAmount).text = cardsInHand.ToString();
                     break;
                 }
             case Message.PromptDiceRoll:
@@ -419,71 +326,14 @@ public class Player : MonoBehaviour
                 {
                     int discard = int.Parse(network.ReadLine());
                     OnScreenText.SetText("Discard " + discard + " Cards");
-                    cardsInHand.DiscardCards(discard);
+                    ((MyHandManager)GetObj(cardsInHands, color)).DiscardCards(discard);
                     break;
                 }
             case Message.ChoosePartner:
             case Message.ChooseSteal:
                 {
                     string colorsToShow = network.ReadLine();
-
-                    Transform colorsPanel = Canvas.Find("Colors");
-
-                    foreach (string player in colorsToShow.Split(' '))
-                    {
-                        PlayerColor color = (PlayerColor)Enum.Parse(typeof(PlayerColor), player);
-                        Debug.Log(color);
-                        GameObject button = colorsPanel.Find(color.ToString()).gameObject;
-                        button.SetActive(true);
-                        button.GetComponent<Button>().onClick.AddListener(delegate
-                        {
-                            network.WriteLine(button.name);
-                            foreach (Button colorButton in colorsPanel.GetComponentsInChildren<Button>())
-                            {
-                                colorButton.onClick.RemoveAllListeners();
-                                colorButton.gameObject.SetActive(false);
-                            }
-                            OnScreenText.SetText("");
-                        });
-                        if (message == Message.ChoosePartner)
-                        {
-                            button.GetComponent<Button>().onClick.AddListener(delegate
-                            {
-                                Canvas.Find("V or X/V").gameObject.SetActive(true);
-                                Canvas.Find("V or X").gameObject.SetActive(false);
-                                Canvas.Find("V or X/X").GetComponent<Button>().onClick.RemoveAllListeners();
-                            });
-                        }
-                    }
-
-                    if (message == Message.ChooseSteal)
-                        OnScreenText.SetText("Choose a player to steal from");
-                    else if (message == Message.ChoosePartner)
-                    {
-                        OnScreenText.SetText("These are the players who want and can trade with you\nChoose a trade partner or click X to cancel the trade");
-                        Transform vx = Canvas.Find("V or X");
-                        vx.gameObject.SetActive(true);
-                        vx.Find("V").gameObject.SetActive(false);
-                        Button x = vx.Find("X").GetComponent<Button>();
-                        x.onClick.AddListener(delegate
-                        {
-                            Canvas.Find("End Button").GetComponent<Button>().interactable = true;
-                            Canvas.Find("Build Button").GetComponent<Button>().interactable = true;
-                            Canvas.Find("Trade Button").GetComponent<Button>().interactable = true;
-
-                            vx.Find("V").gameObject.SetActive(true);
-                            vx.gameObject.SetActive(false);
-
-                            foreach (Button colorButton in colorsPanel.GetComponentsInChildren<Button>())
-                            {
-                                colorButton.onClick.RemoveAllListeners();
-                                colorButton.gameObject.SetActive(false);
-                            }
-                            OnScreenText.SetText("");
-
-                            x.onClick.RemoveAllListeners();
-                        });
-                    }
+                    ChooseColors(message, colorsToShow);
                     break;
                 }
             case Message.MainPhase:
@@ -498,9 +348,7 @@ public class Player : MonoBehaviour
                 {
                     OnScreenText.SetText(network.ReadLine());
                     Canvas.Find("Trade Offer").gameObject.SetActive(false);
-                    Canvas.Find("End Button").GetComponent<Button>().interactable = true;
-                    Canvas.Find("Build Button").GetComponent<Button>().interactable = true;
-                    Canvas.Find("Trade Button").GetComponent<Button>().interactable = true;
+                    MainPhaseButtons(true);
                     break;
                 }
             case Message.PlaceRoad:
@@ -514,9 +362,7 @@ public class Player : MonoBehaviour
                     }
 
                     OnScreenText.SetText("Choose a road to build");
-                    Canvas.Find("End Button").gameObject.SetActive(false);
-                    Canvas.Find("Build Button").gameObject.SetActive(false);
-                    Canvas.Find("Trade Button").gameObject.SetActive(false);
+                    MainPhaseButtons(false);
 
                     state = State.BuildVisualized;
                     break;
@@ -531,9 +377,7 @@ public class Player : MonoBehaviour
                         OnScreenText.SetText("Choose a village to build");
                     if (message == Message.PlaceCity)
                         OnScreenText.SetText("Choose a village to upgrade to a city");
-                    Canvas.Find("End Button").gameObject.SetActive(false);
-                    Canvas.Find("Build Button").gameObject.SetActive(false);
-                    Canvas.Find("Trade Button").gameObject.SetActive(false);
+                    MainPhaseButtons(false);
 
                     state = State.BuildVisualized;
                     break;
@@ -547,7 +391,7 @@ public class Player : MonoBehaviour
                     string victoryPoints = network.ReadLine();
                     if (secretVictoryPoints != 0 && this.color == color)
                         victoryPoints = (int.Parse(victoryPoints) + secretVictoryPoints).ToString();
-                    GetInfoObj(color).GetInfo(PlayerInfo.Info.VictoryPoints).text = victoryPoints;
+                    GetObj(infos, color).GetInfo(PlayerInfo.Info.VictoryPoints).text = victoryPoints;
 
                     Crossroads crossroad = board.Crossroads[new Place(col, row)];
                     crossroad.UpgradeToCity();
@@ -558,9 +402,9 @@ public class Player : MonoBehaviour
                     for (int i = 0; i < pay; i++)
                     {
                         Resource resource = (Resource)Enum.Parse(typeof(Resource), network.ReadLine());
-                        GetHand(color).DiscardAnimation(resource, payTo);
+                        GetObj(cardsInHands, color).DiscardAnimation(resource, payTo);
                     }
-                    GetInfoObj(color).GetInfo(PlayerInfo.Info.CardAmount).text = GetHand(color).CardAmount.ToString();
+                    GetObj(infos, color).GetInfo(PlayerInfo.Info.CardAmount).text = GetObj(cardsInHands, color).CardAmount.ToString();
                     break;
                 }
             case Message.Trade:
@@ -632,8 +476,8 @@ public class Player : MonoBehaviour
                         secondGet[i] = (Resource)Enum.Parse(typeof(Resource), network.ReadLine());
                     }
 
-                    HandManager firstHand = GetHand(firstTrader);
-                    HandManager secondHand = GetHand(secondTrader);
+                    HandManager firstHand = GetObj(cardsInHands, firstTrader);
+                    HandManager secondHand = GetObj(cardsInHands, secondTrader);
 
                     foreach (Resource item in firstGet)
                     {
@@ -647,10 +491,10 @@ public class Player : MonoBehaviour
                     }
 
                     int firstCards = firstHand.CardAmount + firstHand.AnimatedCards;
-                    GetInfoObj(firstTrader).GetInfo(PlayerInfo.Info.CardAmount).text = firstCards.ToString();
+                    GetObj(infos, firstTrader).GetInfo(PlayerInfo.Info.CardAmount).text = firstCards.ToString();
 
                     int secondCards = secondHand.CardAmount + secondHand.AnimatedCards;
-                    GetInfoObj(secondTrader).GetInfo(PlayerInfo.Info.CardAmount).text = secondCards.ToString();
+                    GetObj(infos, secondTrader).GetInfo(PlayerInfo.Info.CardAmount).text = secondCards.ToString();
 
                     Canvas.Find("Trade Offer").gameObject.SetActive(false);
                     Canvas.Find("End Button").GetComponent<Button>().interactable = true;
@@ -663,7 +507,7 @@ public class Player : MonoBehaviour
             case Message.SoloTrade:
                 {
                     PlayerColor trader = (PlayerColor)Enum.Parse(typeof(PlayerColor), network.ReadLine());
-                    HandManager hand = GetHand(trader);
+                    HandManager hand = GetObj(cardsInHands, trader);
 
                     Vector3 payTo = board.Tiles[new Place(3, 3)].GameObject.transform.position;
 
@@ -680,7 +524,7 @@ public class Player : MonoBehaviour
                         hand.AddAnimation(item, payTo);
                     }
 
-                    GetInfoObj(trader).GetInfo(PlayerInfo.Info.CardAmount).text = network.ReadLine();
+                    GetObj(infos, trader).GetInfo(PlayerInfo.Info.CardAmount).text = network.ReadLine();
 
                     OnScreenText.SetText("The " + trader.ToString() + " player traded!");
                     break;
@@ -690,32 +534,32 @@ public class Player : MonoBehaviour
                     PlayerColor color = (PlayerColor)Enum.Parse(typeof(PlayerColor), network.ReadLine());
 
                     string devCardAmount = network.ReadLine();
-                    GetInfoObj(color).GetInfo(PlayerInfo.Info.DevelopmentCards).text = devCardAmount;
+                    GetObj(infos, color).GetInfo(PlayerInfo.Info.DevelopmentCards).text = devCardAmount;
 
                     int pay = int.Parse(network.ReadLine());
                     Vector3 payTo = GameObject.Find("Development Cards").transform.position;
                     for (int i = 0; i < pay; i++)
                     {
                         Resource resource = (Resource)Enum.Parse(typeof(Resource), network.ReadLine());
-                        GetHand(color).DiscardAnimation(resource, payTo);
+                        GetObj(cardsInHands, color).DiscardAnimation(resource, payTo);
                     }
-                    GetInfoObj(color).GetInfo(PlayerInfo.Info.CardAmount).text = GetHand(color).CardAmount.ToString();
+                    GetObj(infos, color).GetInfo(PlayerInfo.Info.CardAmount).text = GetObj(cardsInHands, color).CardAmount.ToString();
 
                     if (this.color == color)
                     {
                         DevCard addCard = (DevCard)Enum.Parse(typeof(DevCard), network.ReadLine());
                         AddDevCardAnim(addCard);
-                        devCards.Find(addCard.ToString()).GetComponent<DevelopmentCard>().AddCard();
+                        devCardsMenu.Find(addCard.ToString()).GetComponent<DevelopmentCard>().AddCard();
                         OnScreenText.SetText("You got a " + DevelopmentCard.fullNames[addCard] + " card!");
 
                         if (addCard.ToString().StartsWith("Point"))
                             secretVictoryPoints++;
 
-                        GetInfoObj(color).GetInfo(PlayerInfo.Info.VictoryPoints).text = network.ReadLine();
+                        GetObj(infos, color).GetInfo(PlayerInfo.Info.VictoryPoints).text = network.ReadLine();
                     }
                     else
                     {
-                        GetHand(color).AddAnimation(null, payTo);
+                        GetObj(cardsInHands, color).AddAnimation(null, payTo);
                         OnScreenText.SetText("The " + color.ToString() + " player bought a development card");
                     }
                     break;
@@ -724,12 +568,12 @@ public class Player : MonoBehaviour
                 {
                     PlayerColor color = (PlayerColor)Enum.Parse(typeof(PlayerColor), network.ReadLine());
                     DevCard card = (DevCard)Enum.Parse(typeof(DevCard), network.ReadLine());
-                    GetInfoObj(color).GetInfo(PlayerInfo.Info.DevelopmentCards).text = network.ReadLine();
-                    GetInfoObj(color).GetInfo(PlayerInfo.Info.KnightsUsed).text = network.ReadLine();
+                    GetObj(infos, color).GetInfo(PlayerInfo.Info.DevelopmentCards).text = network.ReadLine();
+                    GetObj(infos, color).GetInfo(PlayerInfo.Info.KnightsUsed).text = network.ReadLine();
 
                     if (this.color == color)
                     {
-                        devCards.Find(card.ToString()).GetComponent<DevelopmentCard>().UseCard();
+                        devCardsMenu.Find(card.ToString()).GetComponent<DevelopmentCard>().UseCard();
                         switch (card)
                         {
                             case DevCard.Knight:
@@ -752,7 +596,7 @@ public class Player : MonoBehaviour
                                     if (works == Message.Cancel.ToString())
                                     {
                                         OnScreenText.SetText(network.ReadLine());
-                                        devCards.Find(card.ToString()).GetComponent<DevelopmentCard>().AddCard();
+                                        devCardsMenu.Find(card.ToString()).GetComponent<DevelopmentCard>().AddCard();
                                         break;
                                     }
 
@@ -799,35 +643,7 @@ public class Player : MonoBehaviour
                 }
             case Message.Reward:
                 {
-                    string type = network.ReadLine();
-
-                    PlayerColor earner = (PlayerColor)Enum.Parse(typeof(PlayerColor), network.ReadLine());
-                    string victoryPoints = network.ReadLine();
-                    if (secretVictoryPoints != 0 && this.color == earner)
-                        victoryPoints = (int.Parse(victoryPoints) + secretVictoryPoints).ToString();
-                    GetInfoObj(earner).GetInfo(PlayerInfo.Info.VictoryPoints).text = victoryPoints;
-
-                    if (type == "Army")
-                    {
-                        GetInfoObj(earner).LargestArmy(true);
-                        OnScreenText.SetText("The " + earner + " player took the Largest Army reward!");
-                    }
-
-                        string loserColor = network.ReadLine();
-                    if (loserColor != "")
-                    {
-                        PlayerColor loser = (PlayerColor)Enum.Parse(typeof(PlayerColor), loserColor);
-                        victoryPoints = network.ReadLine();
-                        if (secretVictoryPoints != 0 && this.color == loser)
-                            victoryPoints = (int.Parse(victoryPoints) + secretVictoryPoints).ToString();
-                        GetInfoObj(loser).GetInfo(PlayerInfo.Info.VictoryPoints).text = victoryPoints;
-                        if (type == "Army")
-                            GetInfoObj(loser).LargestArmy(false);
-                    }
-
-                    if (type != "Army")
-                        Debug.LogWarning("Do not recognize the " + type + " reward");
-
+                    Rewards();
                     break;
                 }
             case Message.NewPort:
@@ -848,7 +664,267 @@ public class Player : MonoBehaviour
                     }
                     break;
                 }
+            case Message.Win:
+                {
+                    PlayerColor winner = (PlayerColor)Enum.Parse(typeof(PlayerColor), network.ReadLine());
+                    int[] details = network.Deserialize<int[]>();
+                    network.OnApplicationQuit();
+                    network.enabled = false;
+                    Canvas.Find("End Button").gameObject.SetActive(false);
+                    Canvas.Find("Build Button").gameObject.SetActive(false);
+                    Canvas.Find("Trade Button").gameObject.SetActive(false);
+
+                    Transform detailsMenu = Canvas.Find("WinDetails");
+                    detailsMenu.gameObject.SetActive(true);
+                    detailsMenu.Find("Title").GetComponent<TextMeshProUGUI>().text = "The " + winner.ToString() + " player won!";
+                    for (int i = 0; i < detailsMenu.childCount; i++)
+                    {
+                        Transform model = detailsMenu.GetChild(i).Find("Model");
+                        if (model != null)
+                        {
+                            model.GetChild(0).GetComponent<Renderer>().material = Prefabs.UIColors[winner];
+                        }
+                    }
+                    int sum = 0;
+                    foreach (WinCon con in Enum.GetValues(typeof(WinCon)))
+                    {
+                        Transform parent = detailsMenu.Find(con.ToString());
+                        int value = details[(int)con];
+                        parent.Find("Amount").GetComponent<TextMeshProUGUI>().text = "x" + value;
+                        if (con == WinCon.ArmyAward || con == WinCon.RoadsAward || con == WinCon.City)
+                            value *= 2;
+                        parent.Find("Sum").GetComponent<TextMeshProUGUI>().text = value.ToString();
+                        sum += value;
+                    }
+                    detailsMenu.Find("Sum").GetComponent<TextMeshProUGUI>().text = sum.ToString();
+                    break;
+                }
         }
+    }
+
+    /// <summary>
+    /// Handles a message to build a vilage or a road.
+    /// </summary>
+    /// <param name="message">The message we got</param>
+    private void BuildMessages(Message message)
+    {
+        PlayerColor color = (PlayerColor)Enum.Parse(typeof(PlayerColor), network.ReadLine());
+        int col = int.Parse(network.ReadLine());
+        int row = int.Parse(network.ReadLine());
+        Crossroads crossroad = board.Crossroads[new Place(col, row)];
+
+        Vector3 payTo = Vector3.zero;
+        if (message == Message.BuildVillage)
+        {
+            string victoryPoints = network.ReadLine();
+
+            crossroad.BuildVillage(color);
+
+            payTo = crossroad.Building.transform.position;
+
+            if (secretVictoryPoints != 0 && this.color == color)
+                victoryPoints = (int.Parse(victoryPoints) + secretVictoryPoints).ToString();
+            GetObj(infos, color).GetInfo(PlayerInfo.Info.VictoryPoints).text = victoryPoints;
+
+            if (state == State.StartSelected)
+            {
+                GameObject visuals = new GameObject("Visuals Parent");
+                visuals.transform.parent = transform;
+                VisualizeRoads(crossroad, visuals);
+                OnScreenText.SetText("Choose a direction to start off your road");
+                state = State.StartVisualized;
+            }
+        }
+        else if (message == Message.BuildRoad)
+        {
+            int rightLeft = int.Parse(network.ReadLine());
+            int upDown = int.Parse(network.ReadLine());
+
+            crossroad.Roads[rightLeft][upDown].Build(color);
+
+            payTo = crossroad.Roads[rightLeft][upDown].Building.transform.position;
+
+            if (state == State.StartSelected)
+            {
+                state = null;
+            }
+        }
+
+        int pay = int.Parse(network.ReadLine());
+
+        for (int i = 0; i < pay; i++)
+        {
+            Resource resource = (Resource)Enum.Parse(typeof(Resource), network.ReadLine());
+            GetObj(cardsInHands, color).DiscardAnimation(resource, payTo);
+        }
+        GetObj(infos, color).GetInfo(PlayerInfo.Info.CardAmount).text = GetObj(cardsInHands, color).CardAmount.ToString();
+
+        if (state == State.FreeRoadSelected)
+        {
+            if (pay == -1) // means we've got another free road
+            {
+                string works = network.ReadLine();
+                if (works == Message.Cancel.ToString())
+                {
+                    OnScreenText.SetText(network.ReadLine());
+                    return;
+                }
+
+                List<Place> places = network.Deserialize<List<Place>>();
+                GameObject visuals = new GameObject("Visuals Parent");
+                visuals.transform.parent = transform;
+                foreach (Place place in places)
+                {
+                    VisualizeRoads(board.Crossroads[place], visuals);
+                }
+
+                OnScreenText.SetText("Choose a road to build");
+
+                state = State.FreeRoadVisualized;
+            }
+            else
+            {
+                MainPhaseButtons(true);
+                state = State.MainPhase;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Adds a resource to a player's hand.
+    /// </summary>
+    /// <param name="player">The player color to add the resource to</param>
+    /// <param name="resource">The resource to add</param>
+    /// <param name="col">The tile to animate from's column, or -1 if it is a resource from a development card</param>
+    /// <param name="row">The tile to animate from's row, or -1 if it is a resource from a development card</param>
+    private void AddResource(PlayerColor player, Resource resource, int col, int row)
+    {
+        Vector3 getFrom = Vector3.zero;
+
+        if (state == State.FreeCard)
+        {
+            getFrom = GameObject.Find("Development Cards").transform.position;
+            Canvas.Find("Resources").gameObject.SetActive(true);
+            OnScreenText.SetText("Choose another resource to get");
+            state = State.MainPhase;
+        }
+        else if (col == -1)
+            getFrom = GameObject.Find("Development Cards").transform.position;
+        else
+            getFrom = board.Tiles[new Place(col, row)].GameObject.transform.position;
+
+        GetObj(cardsInHands, player).AddAnimation(resource, getFrom);
+
+        int cardsInHand = GetObj(cardsInHands, player).CardAmount + GetObj(cardsInHands, player).AnimatedCards;
+        GetObj(infos, color).GetInfo(PlayerInfo.Info.CardAmount).text = cardsInHand.ToString();
+    }
+
+    /// <summary>
+    /// Shows a the colors menu, and other widgets needed for the reason the function is called.
+    /// </summary>
+    /// <param name="reason">The message that triggered the open, used to decide exactly which widgets to show</param>
+    /// <param name="colorsToShow">The colors needed to be shown</param>
+    private void ChooseColors(Message reason, string colorsToShow)
+    {
+        Transform colorsPanel = Canvas.Find("Colors");
+
+        foreach (string player in colorsToShow.Split(' '))
+        {
+            PlayerColor color = (PlayerColor)Enum.Parse(typeof(PlayerColor), player);
+            Debug.Log(color);
+            GameObject button = colorsPanel.Find(color.ToString()).gameObject;
+            button.SetActive(true);
+            button.GetComponent<Button>().onClick.AddListener(delegate
+            {
+                network.WriteLine(button.name);
+                foreach (Button colorButton in colorsPanel.GetComponentsInChildren<Button>())
+                {
+                    colorButton.onClick.RemoveAllListeners();
+                    colorButton.gameObject.SetActive(false);
+                }
+                OnScreenText.SetText("");
+            });
+            if (reason == Message.ChoosePartner)
+            {
+                button.GetComponent<Button>().onClick.AddListener(delegate
+                {
+                    Canvas.Find("V or X/V").gameObject.SetActive(true);
+                    Canvas.Find("V or X").gameObject.SetActive(false);
+                    Canvas.Find("V or X/X").GetComponent<Button>().onClick.RemoveAllListeners();
+                });
+            }
+        }
+
+        if (reason == Message.ChooseSteal)
+            OnScreenText.SetText("Choose a player to steal from");
+        else if (reason == Message.ChoosePartner)
+        {
+            OnScreenText.SetText("These are the players who want and can trade with you\nChoose a trade partner or click X to cancel the trade");
+            Transform vx = Canvas.Find("V or X");
+            vx.gameObject.SetActive(true);
+            vx.Find("V").gameObject.SetActive(false);
+            Button x = vx.Find("X").GetComponent<Button>();
+            x.onClick.AddListener(delegate
+            {
+                Canvas.Find("End Button").GetComponent<Button>().interactable = true;
+                Canvas.Find("Build Button").GetComponent<Button>().interactable = true;
+                Canvas.Find("Trade Button").GetComponent<Button>().interactable = true;
+
+                vx.Find("V").gameObject.SetActive(true);
+                vx.gameObject.SetActive(false);
+
+                foreach (Button colorButton in colorsPanel.GetComponentsInChildren<Button>())
+                {
+                    colorButton.onClick.RemoveAllListeners();
+                    colorButton.gameObject.SetActive(false);
+                }
+                OnScreenText.SetText("");
+
+                x.onClick.RemoveAllListeners();
+            });
+        }
+    }
+
+    /// <summary>
+    /// Gives a reward to a player, using information got from the server.
+    /// </summary>
+    private void Rewards()
+    {
+        string type = network.ReadLine();
+
+        PlayerColor earner = (PlayerColor)Enum.Parse(typeof(PlayerColor), network.ReadLine());
+        string victoryPoints = network.ReadLine();
+        if (secretVictoryPoints != 0 && this.color == earner)
+            victoryPoints = (int.Parse(victoryPoints) + secretVictoryPoints).ToString();
+        GetObj(infos, earner).GetInfo(PlayerInfo.Info.VictoryPoints).text = victoryPoints;
+
+        if (type == "Army")
+        {
+            GetObj(infos, earner).LargestArmy(true);
+            OnScreenText.SetText("The " + earner + " player took the Largest Army reward!");
+        }
+        else if (type == "Road")
+        {
+            GetObj(infos, earner).LongestRoad(true);
+            OnScreenText.SetText("The " + earner + " player took the Longest Road reward with a road build of " + network.ReadLine() + " parts");
+        }
+
+        string loserColor = network.ReadLine();
+        if (loserColor != "")
+        {
+            PlayerColor loser = (PlayerColor)Enum.Parse(typeof(PlayerColor), loserColor);
+            victoryPoints = network.ReadLine();
+            if (secretVictoryPoints != 0 && this.color == loser)
+                victoryPoints = (int.Parse(victoryPoints) + secretVictoryPoints).ToString();
+            GetObj(infos, loser).GetInfo(PlayerInfo.Info.VictoryPoints).text = victoryPoints;
+            if (type == "Army")
+                GetObj(infos, loser).LargestArmy(false);
+            else if (type == "Road")
+                GetObj(infos, loser).LongestRoad(false);
+        }
+
+        if (type != "Army" && type != "Road")
+            Debug.LogWarning("Do not recognize the " + type + " reward");
     }
 
     /// <summary>
@@ -982,28 +1058,32 @@ public class Player : MonoBehaviour
         }
         if (state == State.BuildSelected)
         {
-            Canvas.Find("End Button").gameObject.SetActive(true);
-            Canvas.Find("Build Button").gameObject.SetActive(true);
-            Canvas.Find("Trade Button").gameObject.SetActive(true);
+            MainPhaseButtons(true);
             state = State.MainPhase;
         }
         vx.SetActive(false);
         OnScreenText.SetText("");
     }
 
+    /// <summary>
+    /// Cancels an attempt to build.
+    /// Called by UI elements.
+    /// </summary>
     public void CancelBuild()
     {
         network.WriteLine(Message.Cancel.ToString());
         Destroy(GameObject.Find("Visuals Parent"));
         Canvas.Find("V or X").gameObject.SetActive(false);
         OnScreenText.SetText("");
-        Canvas.Find("End Button").gameObject.SetActive(true);
-        Canvas.Find("Build Button").gameObject.SetActive(true);
-        Canvas.Find("Trade Button").gameObject.SetActive(true);
+        MainPhaseButtons(true);
 
         state = State.MainPhase;
     }
 
+    /// <summary>
+    /// Confirms a trade offer to send to the other player, designed in the trade menu.
+    /// Called by UI elements.
+    /// </summary>
     public void ConfirmTradeOffer()
     {
         Transform tradePanel = Canvas.Find("Trade Panel");
@@ -1017,9 +1097,7 @@ public class Player : MonoBehaviour
                 if (give != 0 && get != 0)
                 {
                     OnScreenText.SetText("You cannot give and take the same resource!\nOne of them must be zero");
-                    Canvas.Find("End Button").GetComponent<Button>().interactable = true;
-                    Canvas.Find("Build Button").GetComponent<Button>().interactable = true;
-                    Canvas.Find("Trade Button").GetComponent<Button>().interactable = true;
+                    MainPhaseButtons(true);
                     return;
                 }
                 offer += resource.ToString() + " " + (get - give) + ",";
@@ -1028,9 +1106,7 @@ public class Player : MonoBehaviour
         if (offer == "")
         {
             OnScreenText.SetText("Trade is empty");
-            Canvas.Find("End Button").GetComponent<Button>().interactable = true;
-            Canvas.Find("Build Button").GetComponent<Button>().interactable = true;
-            Canvas.Find("Trade Button").GetComponent<Button>().interactable = true;
+            MainPhaseButtons(true);
         }
         else
         {
@@ -1040,6 +1116,10 @@ public class Player : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Confirms a solo trade, designed in the trade menu.
+    /// Called by UI elements.
+    /// </summary>
     public void ConfirmSoloTrade()
     {
         Transform tradePanel = Canvas.Find("Solo Trade");
@@ -1051,9 +1131,7 @@ public class Player : MonoBehaviour
             if (!trader.LegalTrade())
             {
                 OnScreenText.SetText("You cannot give and take the same resource!\nOne of them must be zero");
-                Canvas.Find("End Button").GetComponent<Button>().interactable = true;
-                Canvas.Find("Build Button").GetComponent<Button>().interactable = true;
-                Canvas.Find("Trade Button").GetComponent<Button>().interactable = true;
+                MainPhaseButtons(true);
                 return;
             }
             if (trader.AmountTrading() != 0)
@@ -1065,16 +1143,12 @@ public class Player : MonoBehaviour
         if (value != 0)
         {
             OnScreenText.SetText("Trade is not legal");
-            Canvas.Find("End Button").GetComponent<Button>().interactable = true;
-            Canvas.Find("Build Button").GetComponent<Button>().interactable = true;
-            Canvas.Find("Trade Button").GetComponent<Button>().interactable = true;
+            MainPhaseButtons(true);
         }
         else if (offer == "")
         {
             OnScreenText.SetText("Trade is empty");
-            Canvas.Find("End Button").GetComponent<Button>().interactable = true;
-            Canvas.Find("Build Button").GetComponent<Button>().interactable = true;
-            Canvas.Find("Trade Button").GetComponent<Button>().interactable = true;
+            MainPhaseButtons(true);
         }
         else
         {
@@ -1083,6 +1157,21 @@ public class Player : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Changes the active state to all three main phase buttons - build, trade and end turn.
+    /// </summary>
+    /// <param name="active">The new active state</param>
+    public void MainPhaseButtons(bool active)
+    {
+        Canvas.Find("End Button").GetComponent<Button>().interactable = active;
+        Canvas.Find("Build Button").GetComponent<Button>().interactable = active;
+        Canvas.Find("Trade Button").GetComponent<Button>().interactable = active;
+    }
+
+    /// <summary>
+    /// Triggers an animation of adding a development card.
+    /// </summary>
+    /// <param name="card">The card to add</param>
     private void AddDevCardAnim(DevCard card)
     {
         GameObject newCard = new GameObject("Card", typeof(Animation), typeof(SpriteRenderer));
@@ -1095,28 +1184,26 @@ public class Player : MonoBehaviour
     }
 
     /// <summary>
-    /// Gets the hand manager for a specific player by color.
+    /// Gets an object connected to a specific player by color.
     /// </summary>
+    /// <typeparam name="T">The object's type</typeparam>
+    /// <param name="options">The array of the different players' objects</param>
     /// <param name="player">The player's color</param>
-    /// <returns>The player's hand manager</returns>
-    private HandManager GetHand(PlayerColor player)
-    {
-        if (player == this.color)
-            return this.cardsInHand;
-        else
-        {
-            int handIndex = (int)player - (int)this.color - 1;
-            if (handIndex < 0)
-                handIndex += otherHands.Length + 1;
-            return otherHands[handIndex];
-        }
-    }
-
-    private PlayerInfo GetInfoObj(PlayerColor player)
+    /// <returns>The player's object</returns>
+    private T GetObj<T>(T[] options, PlayerColor player)
     {
         int index = (int)player - (int)this.color;
         if (index < 0)
-            index += infos.Length;
-        return infos[index];
+            index += options.Length;
+        return options[index];
+    }
+
+    /// <summary>
+    /// Reloads the scene, basically restarts the program.
+    /// Called by UI elements at the end of a game.
+    /// </summary>
+    public void Reload()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 }

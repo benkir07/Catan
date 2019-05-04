@@ -8,7 +8,9 @@ namespace Catan_Server
 {
     class Player
     {
-        private static XmlSerializer Serializer { get; } = new XmlSerializer(typeof(List<int[]>));
+        public const int Villages = 5;
+        public const int Cities = 4;
+        public const int Roads = 15;
 
         public TcpClient Socket { get; }
         public EndPoint IPPort { get; }
@@ -19,13 +21,13 @@ namespace Catan_Server
         public List<Resource> resources = new List<Resource>();
         public List<DevCard> devCards = new List<DevCard>();
         public List<Resource?> ports = new List<Resource?>();
-        public int VillagesLeft = 5;
-        public int CitiesLeft = 4;
-        public int RoadsLeft = 15;
+        public int VillagesLeft = Villages;
+        public int CitiesLeft = Cities;
+        public int RoadsLeft = Roads;
         public int VictoryPoints = 0;
         public int SecretPoints = 0;
         public int KnightsUsed = 0;
-
+        public int LongestRoad = 0;
 
         /// <summary>
         /// Initializes a new Player object representing a player in a game.
@@ -71,16 +73,17 @@ namespace Catan_Server
         /// <summary>
         /// Serializes (in Xml format) and sends an object to the player.
         /// </summary>
+        /// <typeparam name="T">The object's type</typeparam>
         /// <param name="toSend">The object to send</param>
-        public void Send(object toSend) 
+        public void Send<T>(T toSend) 
         {
             StringWriter xml = new StringWriter();
-            XmlSerializer serializer = new XmlSerializer(toSend.GetType());
+            XmlSerializer serializer = new XmlSerializer(typeof(T));
             serializer.Serialize(xml, toSend);
             WriteLine(xml.ToString().Length.ToString());
 
             WriteTo.Write(xml.ToString());
-            ReadFrom.ReadLine(); //Sign that got the message
+            ReadFrom.ReadLine(); //Signs that got the message
         }
 
         /// <summary>
@@ -95,6 +98,11 @@ namespace Catan_Server
             return taking;
         }
 
+        /// <summary>
+        /// Checks if the player has a specific set of resources.
+        /// </summary>
+        /// <param name="cost">The set of resources to check</param>
+        /// <returns>true if the player got those resources and false otherwise</returns>
         public bool HasResources(Resource[] cost)
         {
             List<Resource> temp = new List<Resource>(this.resources);
@@ -111,11 +119,12 @@ namespace Catan_Server
         /// <summary>
         /// Closes the player's socket
         /// </summary>
-        public void Close() 
+        public void Close(string reason)
         {
             try
             {
                 WriteLine(Message.Disconnect.ToString());
+                WriteLine(reason);
             }
             catch
             {

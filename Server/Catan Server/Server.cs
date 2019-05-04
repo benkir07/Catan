@@ -33,6 +33,7 @@ namespace Catan_Server
             Gui = new ServerGUI();
 
             server = new Thread(HandleClients);
+            server.Name = "Server Thread";
             server.Start();
 
             Application.Run(Gui);
@@ -94,21 +95,10 @@ namespace Catan_Server
         public static void Close()
         {
             online = false;
-            while (Games.Count > 0 && server.ThreadState == ThreadState.Running) { }
-        }
-
-        /// <summary>
-        /// Serializes (in Xml format) an object.
-        /// </summary>
-        /// <param name="toSerialize">The object to serialize</param>
-        /// <returns>The xml string</returns>
-        public static string Serialize(object toSerialize)
-        {
-            StringWriter xml = new StringWriter();
-            XmlSerializer serializer = new XmlSerializer(toSerialize.GetType());
-            serializer.Serialize(xml, toSerialize);
-
-            return xml.ToString();
+            while (Games.Count > 0)
+            {
+                Games[0].Stop("Server closed");
+            }
         }
     }
 }

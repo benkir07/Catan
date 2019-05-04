@@ -4,8 +4,6 @@ using TMPro;
 
 public class SoloTrader : MonoBehaviour
 {
-    private static int loaded = 0;
-
     private TextMeshProUGUI rateText;
     private NumberField give;
     private NumberField get;
@@ -24,6 +22,9 @@ public class SoloTrader : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Initializes the needed variables.
+    /// </summary>
     private void Awake()
     {
         rateText = transform.Find("Rate").GetComponent<TextMeshProUGUI>();
@@ -31,23 +32,30 @@ public class SoloTrader : MonoBehaviour
         get = transform.Find("Get").GetComponent<NumberField>();
 
         rate = 4;
-
-        loaded++;
-
-        if (loaded == Enum.GetValues(typeof(Resource)).Length)
-            transform.parent.gameObject.SetActive(false);
     }
 
+    /// <summary>
+    /// Checks if the trade is legal.
+    /// </summary>
+    /// <returns>false if the player chose to give and get this resource, and true otherwise</returns>
     public bool LegalTrade()
     {
         return give.CurrentNum == 0 || get.CurrentNum == 0;
     }
 
+    /// <summary>
+    /// Gets the resource's trade value.
+    /// </summary>
+    /// <returns>The resource's value in the trade, positive if getting, and negaive if giving</returns>
     public int TradeValue()
     {
         return get.CurrentNum - give.CurrentNum / Rate;
     }
 
+    /// <summary>
+    /// Gets the amount of this resource the player is trading.
+    /// </summary>
+    /// <returns>The amount, positive if getting, and negaive if giving</returns>
     public int AmountTrading()
     {
         return get.CurrentNum - give.CurrentNum;

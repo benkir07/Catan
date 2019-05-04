@@ -32,7 +32,13 @@
             this.LogLabel = new System.Windows.Forms.Label();
             this.ChoosePlayersPerGame = new System.Windows.Forms.NumericUpDown();
             this.PlayersAmountLabel = new System.Windows.Forms.Label();
+            this.Result1 = new System.Windows.Forms.NumericUpDown();
+            this.Result2 = new System.Windows.Forms.NumericUpDown();
+            this.ResultsButton = new System.Windows.Forms.Button();
+            this.Reset = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.ChoosePlayersPerGame)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.Result1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.Result2)).BeginInit();
             this.SuspendLayout();
             // 
             // Log
@@ -88,11 +94,83 @@
             this.PlayersAmountLabel.TabIndex = 7;
             this.PlayersAmountLabel.Text = "Players Per Game:";
             // 
+            // Result1
+            // 
+            this.Result1.AccessibleRole = System.Windows.Forms.AccessibleRole.None;
+            this.Result1.Cursor = System.Windows.Forms.Cursors.Arrow;
+            this.Result1.Location = new System.Drawing.Point(442, 43);
+            this.Result1.Maximum = new decimal(new int[] {
+            6,
+            0,
+            0,
+            0});
+            this.Result1.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.Result1.Name = "Result1";
+            this.Result1.Size = new System.Drawing.Size(120, 20);
+            this.Result1.TabIndex = 8;
+            this.Result1.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            // 
+            // Result2
+            // 
+            this.Result2.AccessibleRole = System.Windows.Forms.AccessibleRole.None;
+            this.Result2.Cursor = System.Windows.Forms.Cursors.Arrow;
+            this.Result2.Location = new System.Drawing.Point(568, 43);
+            this.Result2.Maximum = new decimal(new int[] {
+            6,
+            0,
+            0,
+            0});
+            this.Result2.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.Result2.Name = "Result2";
+            this.Result2.Size = new System.Drawing.Size(120, 20);
+            this.Result2.TabIndex = 9;
+            this.Result2.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            // 
+            // ResultsButton
+            // 
+            this.ResultsButton.Location = new System.Drawing.Point(516, 69);
+            this.ResultsButton.Name = "ResultsButton";
+            this.ResultsButton.Size = new System.Drawing.Size(88, 23);
+            this.ResultsButton.TabIndex = 10;
+            this.ResultsButton.Text = "Set up Results";
+            this.ResultsButton.UseVisualStyleBackColor = true;
+            this.ResultsButton.Click += new System.EventHandler(this.ResultsButton_Click);
+            // 
+            // Reset
+            // 
+            this.Reset.Location = new System.Drawing.Point(504, 98);
+            this.Reset.Name = "Reset";
+            this.Reset.Size = new System.Drawing.Size(114, 23);
+            this.Reset.TabIndex = 11;
+            this.Reset.Text = "Randomize Results";
+            this.Reset.UseVisualStyleBackColor = true;
+            this.Reset.Click += new System.EventHandler(this.Reset_Click);
+            // 
             // ServerGUI
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.Reset);
+            this.Controls.Add(this.ResultsButton);
+            this.Controls.Add(this.Result2);
+            this.Controls.Add(this.Result1);
             this.Controls.Add(this.PlayersAmountLabel);
             this.Controls.Add(this.ChoosePlayersPerGame);
             this.Controls.Add(this.LogLabel);
@@ -101,6 +179,8 @@
             this.Text = "ServerGUI";
             this.Load += new System.EventHandler(this.ServerGUI_Load);
             ((System.ComponentModel.ISupportInitialize)(this.ChoosePlayersPerGame)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.Result1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.Result2)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -111,5 +191,9 @@
         private System.Windows.Forms.Label LogLabel;
         private System.Windows.Forms.NumericUpDown ChoosePlayersPerGame;
         private System.Windows.Forms.Label PlayersAmountLabel;
+        private System.Windows.Forms.NumericUpDown Result1;
+        private System.Windows.Forms.NumericUpDown Result2;
+        private System.Windows.Forms.Button ResultsButton;
+        private System.Windows.Forms.Button Reset;
     }
 }

@@ -175,6 +175,10 @@ public class GameManager : MonoBehaviour
                                 }
                             }
                         }
+                        if (Input.GetKey(KeyCode.Return))
+                        {
+                            GameObject.Find("End Button").GetComponent<Button>().onClick.Invoke();
+                        }
                         break;
                     }
                 case State.BuildVisualized:
@@ -265,9 +269,9 @@ public class GameManager : MonoBehaviour
                     victimHand.Discard(resource);
                     GetObj(infos, victim).GetInfo(PlayerInfo.Info.CardAmount).text = GetObj(cardsInHands, victim).CardAmount.ToString();
 
-                    GetObj(cardsInHands, thief).AddAnimation(resource, victimHand.transform.position + victimHand.HandPos);
-                    int cardsInHand = GetObj(cardsInHands, thief).CardAmount + GetObj(cardsInHands, thief).AnimatedCards;
-                    GetObj(infos, thief).GetInfo(PlayerInfo.Info.CardAmount).text = cardsInHand.ToString();
+                    HandManager thiefHand = GetObj(cardsInHands, thief);
+                    thiefHand.AddAnimation(resource, victimHand.transform.position + victimHand.HandPos);
+                    GetObj(infos, thief).GetInfo(PlayerInfo.Info.CardAmount).text = (thiefHand.CardAmount + thiefHand.AnimatedCards).ToString();
                     break;
                 }
             case Message.PromptDiceRoll:
@@ -816,7 +820,7 @@ public class GameManager : MonoBehaviour
         GetObj(cardsInHands, player).AddAnimation(resource, getFrom);
 
         int cardsInHand = GetObj(cardsInHands, player).CardAmount + GetObj(cardsInHands, player).AnimatedCards;
-        GetObj(infos, color).GetInfo(PlayerInfo.Info.CardAmount).text = cardsInHand.ToString();
+        GetObj(infos, player).GetInfo(PlayerInfo.Info.CardAmount).text = cardsInHand.ToString();
     }
 
     /// <summary>

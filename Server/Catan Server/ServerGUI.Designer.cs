@@ -72,7 +72,7 @@
             0,
             0});
             this.ChoosePlayersPerGame.Minimum = new decimal(new int[] {
-            1,
+            2,
             0,
             0,
             0});
@@ -80,7 +80,7 @@
             this.ChoosePlayersPerGame.Size = new System.Drawing.Size(120, 20);
             this.ChoosePlayersPerGame.TabIndex = 6;
             this.ChoosePlayersPerGame.Value = new decimal(new int[] {
-            1,
+            2,
             0,
             0,
             0});

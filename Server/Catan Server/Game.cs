@@ -120,12 +120,13 @@ namespace Catan_Server
                 */
 
                 /* makes the first player win automatically for testing
+                
                 HasLongestRoad = players[0]; //2
                 HasLargestArmy = players[0]; //2
                 players[0].devCards.Add(DevCard.Point1); //1
                 players[0].CitiesLeft = 2; //6
                 players[0].VictoryPoints = 11;
-                */
+                //*/
 
                 while (true)
                 {
@@ -1053,11 +1054,11 @@ namespace Catan_Server
         private static Stack<DevCard> InitDevCards()
         {
             List<DevCard> ret = new List<DevCard>();
-            for (int i = 0; i < 1; i++) //14
+            for (int i = 0; i < 14; i++)
             {
                 ret.Add(DevCard.Knight);
             }
-            for (int i = 0; i < 1; i++) //2
+            for (int i = 0; i < 2; i++)
             {
                 ret.Add(DevCard.Monopoly);
                 ret.Add(DevCard.Plenty);
@@ -1065,7 +1066,7 @@ namespace Catan_Server
             }
             for (int i = 1; i < 5; i++)
             {
-                //ret.Add((DevCard)Enum.Parse(typeof(DevCard), "Point" + i));
+                ret.Add((DevCard)Enum.Parse(typeof(DevCard), "Point" + i));
             }
 
             return new Stack<DevCard>(ret.OrderBy(a => random.Next()));

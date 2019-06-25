@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using System.Net;
@@ -20,7 +21,10 @@ namespace Catan_Server
         public const int Port = 12345;
         public static bool online;
 
-        public static List<TcpClient> Users { get; } = new List<TcpClient>();
+        public static List<User> newUsers { get; } = new List<User>();
+        public static List<User> Users { get; } = new List<User>();
+        public static List<User> disconnected;
+        public static Dictionary<string, Lobby> lobbies { get; } = new Dictionary<string, Lobby>();
         public static List<Game> Games { get; } = new List<Game>();
 
         /// <summary>
@@ -54,35 +58,148 @@ namespace Catan_Server
             {
                 if (serverSocket.Pending())
                 {
-                    TcpClient client = serverSocket.AcceptTcpClient();
-                    Gui.EnterLog(client.Client.RemoteEndPoint + " Connected");
+                    User client = new User(serverSocket.AcceptTcpClient());
 
-                    Users.Add(client);
-                }
-
-                if (Users.Count == Gui.PlayersPerGame)
-                {
-                    Games.Add(new Game(Users.ToArray()));
-                    Users.Clear();
-                }
-
-                List<TcpClient> disconnected = new List<TcpClient>();
-                foreach (TcpClient user in Users)
-                {
-                    if (user.Client.Poll(0, SelectMode.SelectRead))
+                    if (client.Connected)
                     {
-                        byte[] checkConn = new byte[1];
-                        if (user.Client.Receive(checkConn, SocketFlags.Peek) == 0)
+                        Gui.EnterLog(client.IPPort + " Connected as " + client.name);
+                        Users.Add(client);
+
+                        foreach (Lobby lobby in lobbies.Values)
                         {
-                            disconnected.Add(user);
+                            client.WriteLine(Message.NewLobby.ToString());
+                            client.WriteLine(lobby.ToString());
                         }
                     }
                 }
-                foreach (TcpClient disconnect in disconnected)
+
+                List<Lobby> toRemoveLobby = new List<Lobby>();
+                foreach (Lobby lobby in lobbies.Values)
                 {
-                    Users.Remove(disconnect);
-                    Gui.EnterLog(disconnect.Client.RemoteEndPoint + " Disconnected");
-                    disconnect.Close();
+                    if (lobby.Update())
+                        toRemoveLobby.Add(lobby);
+                }
+
+                foreach (Lobby lobby in toRemoveLobby)
+                {
+                    lobbies.Remove(lobby.name);
+                }
+
+                for (int i = newUsers.Count - 1; i >= 0; i--)
+                {
+                    User client = newUsers[i];
+                    if (client.Available > 0)
+                    {
+                        Message req = (Message)Enum.Parse(typeof(Message), client.ReadLine());
+                        if (req == Message.JoinLobby)
+                        {
+                            foreach (Lobby lobby in lobbies.Values)
+                            {
+                                client.WriteLine(Message.NewLobby.ToString());
+                                client.WriteLine(lobby.ToString());
+                            }
+
+                            Users.Add(client);
+                            newUsers.Remove(client);
+                        }
+                    }
+                }
+
+                List<User> toRemove = new List<User>();
+                foreach (User active in Users)
+                {
+                    if (active.Available > 0)
+                    {
+                        Message message = (Message)Enum.Parse(typeof(Message), active.ReadLine());
+                        switch (message)
+                        {
+                            case Message.NewLobby:
+                                {
+                                    string name = active.ReadLine();
+                                    string password = active.ReadLine();
+                                    if (string.IsNullOrWhiteSpace(name))
+                                        active.WriteLine("Lobby's name cannot be empty");
+                                    if (name.Contains("|"))
+                                        active.WriteLine("Lobby's name cannot contain |");
+                                    else
+                                    {
+                                        bool found = false;
+                                        foreach (string lobbyName in lobbies.Keys)
+                                        {
+                                            if (lobbyName == name)
+                                            {
+                                                active.WriteLine("There is already a lobby with that name, choose another name");
+                                                found = true;
+                                                break;
+                                            }
+                                        }
+                                        if (!found)
+                                        {
+                                            active.WriteLine("");
+
+                                            Lobby newLobby = new Lobby(name, active, password);
+                                            lobbies[name] = newLobby;
+                                            toRemove.Add(active);
+                                            foreach (User user in Users)
+                                            {
+                                                if (!toRemove.Contains(user))
+                                                {
+                                                    user.WriteLine(Message.NewLobby.ToString());
+                                                    user.WriteLine(newLobby.ToString());
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                break;
+                            case Message.JoinLobby:
+                                {
+                                    string name = active.ReadLine();
+                                    if (!lobbies.ContainsKey(name))
+                                        active.WriteLine("There is no such lobby!");
+                                    else
+                                    {
+                                        string password = "";
+                                        if (lobbies[name].password != "")
+                                            password = active.ReadLine();
+                                        if (lobbies[name].UserAmount == 4)
+                                            active.WriteLine("The lobby is full");
+                                        else if (lobbies[name].password != password)
+                                            active.WriteLine("Wrong password");
+                                        else
+                                        {
+                                            active.WriteLine("");
+                                            lobbies[name].AddPlayer(active);
+                                            toRemove.Add(active);
+                                            foreach (User user in Users)
+                                            {
+                                                if (!toRemove.Contains(user))
+                                                {
+                                                    user.WriteLine(Message.UpdateLobby.ToString());
+                                                    user.WriteLine(name);
+                                                    user.WriteLine(lobbies[name].ToString());
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                break;
+                        }
+                    }
+                }
+
+                disconnected = new List<User>();
+                foreach (User user in Users)
+                {
+                    if (!user.Connected)
+                        disconnected.Add(user);
+                }
+
+                foreach (User user in disconnected.Concat(toRemove))
+                {
+                    Users.Remove(user);
+                    if (disconnected.Contains(user))
+                        user.Close();
                 }
             }
 

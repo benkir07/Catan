@@ -17,14 +17,6 @@ namespace Catan_Server
     /// </summary>
     public partial class ServerGUI : Form
     {
-        public int PlayersPerGame
-        {
-            get
-            {
-                return (int)ChoosePlayersPerGame.Value;
-            }
-        }
-        
         /// <summary>
         /// Initializes the GUI.
         /// </summary>

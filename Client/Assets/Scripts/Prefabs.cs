@@ -20,6 +20,7 @@ public static class Prefabs
     public static GameObject Dice;
     public static GameObject Robber;
     public static GameObject Arrow;
+    public static GameObject LobbyLabel;
 
     public static AnimationClip AddDevCard;
 
@@ -88,6 +89,8 @@ public static class Prefabs
         Robber = Resources.Load<GameObject>("Robber");
 
         Arrow = Resources.Load<GameObject>("Arrow");
+
+        LobbyLabel = Resources.Load<GameObject>("Lobby Label");
 
         AddDevCard = Resources.Load<AnimationClip>("AddDevCard");
 

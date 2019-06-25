@@ -38,9 +38,9 @@ namespace Catan_Server
         /// Initializes a game and its relevant properties.
         /// </summary>
         /// <param name="playerSockets">Array of the players' sockets joining the game</param>
-        public Game(TcpClient[] playerSockets) 
+        public Game(User[] players) 
         {
-            if (playerSockets.Length > 4)
+            if (players.Length > 4)
             {
                 throw new Exception("Cannot play with more than 4 players");
             }
@@ -50,35 +50,12 @@ namespace Catan_Server
             this.Board = SerializableBoard.RandomBoard();
             this.DevCards = InitDevCards();
 
-            #region constant Board
-            /*
-            if (Board == null)
-                Board = SerializableBoard.RandomBoard();
-            else
-            {
-                foreach (SerializableCross[] crossArr in Board.Crossroads)
-                {
-                    foreach (SerializableCross cross in crossArr)
-                    {
-                        cross.PlayerColor = null;
-                        foreach (SerializableRoad[] roadArr in cross.Roads)
-                        {
-                            foreach (SerializableRoad road in roadArr)
-                            {
-                                if (road != null)
-                                    road.PlayerColor = null;
-                            }
-                        }
-                    }
-                }
-            }
-            */
-            #endregion
+            players = players.OrderBy(a => random.Next()).ToArray();
 
-            players = new Player[playerSockets.Length];
-            for (int i = 0; i < playerSockets.Length; i++)
+            this.players = new Player[players.Length];
+            for (int i = 0; i < this.players.Length; i++)
             {
-                players[i] = new Player(playerSockets[i], (PlayerColor)i);
+                this.players[i] = new Player(players[i], (PlayerColor)i);
             }
 
             this.game.Start();
@@ -96,6 +73,12 @@ namespace Catan_Server
                 {
                     player.WriteLine(players.Length.ToString());
                     player.Send(Board);
+                }
+
+                //Announce names
+                foreach (Player player in players)
+                {
+                    Broadcast(Message.AssignName, player.PlayerColor.ToString(), player.name);
                 }
 
                 //Place starting villages
@@ -240,7 +223,7 @@ namespace Catan_Server
                         List<Player> done = new List<Player>();
                         foreach (Player player in discarding)
                         {
-                            if (player.Socket.Available > 0)
+                            if (player.Available > 0)
                             {
                                 string cards = player.ReadLine();
                                 foreach (string card in cards.Split(' '))
@@ -513,7 +496,7 @@ namespace Catan_Server
                                 List<Player> done = new List<Player>();
                                 foreach (Player player in thinking)
                                 {
-                                    if (player.Socket.Available > 0)
+                                    if (player.Available > 0)
                                     {
                                         string answer = player.ReadLine();
                                         if (answer == "V")
@@ -1034,7 +1017,7 @@ namespace Catan_Server
         }
 
         /// <summary>
-        /// Stops the game, removes it from the active games and closes the connection with the players.
+        /// Stops the game and removes it from the active games.
         /// </summary>
         /// <param name="reason">The reason of the game closing to inform the players</param>
         public void Stop(string reason) 
@@ -1042,7 +1025,15 @@ namespace Catan_Server
             Server.Games.Remove(this);
             foreach (Player player in players)
             {
-                player.Close(reason);
+                if (player.Connected)
+                {
+                    player.WriteLine(Message.EndGame.ToString());
+                    player.WriteLine(reason);
+
+                    Server.newUsers.Add(player);
+                }
+                else
+                    player.Close();
             }
             game.Abort();
         }

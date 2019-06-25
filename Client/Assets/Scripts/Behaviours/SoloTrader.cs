@@ -25,13 +25,15 @@ public class SoloTrader : MonoBehaviour
     /// <summary>
     /// Initializes the needed variables.
     /// </summary>
-    private void Awake()
+    public void Awake()
     {
         rateText = transform.Find("Rate").GetComponent<TextMeshProUGUI>();
         give = transform.Find("Give").GetComponent<NumberField>();
         get = transform.Find("Get").GetComponent<NumberField>();
 
         rate = 4;
+        give.jump = rate;
+        rateText.text = rate + ":1";
     }
 
     /// <summary>

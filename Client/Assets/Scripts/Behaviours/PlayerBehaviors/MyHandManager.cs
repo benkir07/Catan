@@ -135,6 +135,16 @@ public class MyHandManager : HandManager
         SyncCardScreen();
     }
 
+    public override void DiscardAll()
+    {
+        while (CardsInHand.Count > 0)
+        {
+            CardsInHand.Remove(CardsInHand[0]);
+        }
+
+        SyncCardScreen();
+    }
+
     /// <summary>
     /// Allows the player to choose cards to discard, and sends to the server the names of the discarded cards.
     /// </summary>

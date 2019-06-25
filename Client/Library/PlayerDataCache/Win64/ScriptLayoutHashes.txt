@@ -1,6 +1,6 @@
 Win64
 PlayerPath?
-F:/Programming/Catan/Client Build/Settlers-of-Catan.exe
+G:/Programming/Catan/Client Build/Settlers-of-Catan.exe
 SceneListBegin?
 Assets/Main Scene.unity
 SceneListEnd?
@@ -20,7 +20,7 @@ e1bbf0ab858085e38fae6b12ebbdcd35 UnityEngine.Timeline.dll:UnityEngine.Timeline.P
 201e3fde670b00545944bb3db215c80a UnityEngine.Timeline.dll:UnityEngine.Timeline.TimelineAsset
 71bb6a6b6c8f052f948db64c7dd3ca4f Assembly-CSharp.dll:.ShowStats
 2d37f4c670895e23a6a2e57efe92ed33 Assembly-CSharp.dll:cakeslice.OutlineEffect
-0850cc649b556d2a93fd4ca8f436def0 Assembly-CSharp.dll:.GameManager
+1f16bc3111c22961c852b121e84bdd87 Assembly-CSharp.dll:.GameManager
 71bb6a6b6c8f052f948db64c7dd3ca4f Assembly-CSharp.dll:.DiceThrower
 71bb6a6b6c8f052f948db64c7dd3ca4f Assembly-CSharp.dll:.MarkOnHover
 cf9f5cf2c3145a37ac07f00e50e460f9 UnityEngine.UI.dll:UnityEngine.UI.AspectRatioFitter
@@ -89,6 +89,7 @@ fc108ce7d98c40ac0907e8ca7f500c76 UnityEngine.UI.dll:UnityEngine.UI.Text
 abf1930d8126d0b2e00e9449129a0190 UnityEngine.UI.dll:UnityEngine.EventSystems.TouchInputModule
 64e54c0cbb0177c5ea26f340efb9ff85 UnityEngine.UI.dll:UnityEngine.UI.VerticalLayoutGroup
 e80c1450883443c68d6c2dade213536f Assembly-CSharp.dll:TMPro.Examples.TMPro_InstructionOverlay
+ceeabae13d394bc629a841936a0f574a Assembly-CSharp.dll:.Temp
 8b1fe5dfdcf943fb3b72506b9f19335f Assembly-CSharp.dll:.EnvMapAnimator
 71bb6a6b6c8f052f948db64c7dd3ca4f UnityEngine.Timeline.dll:UnityEngine.Timeline.ActivationPlayableAsset
 06f0fef534ca4c1d6064fd77a26bf722 UnityEngine.Timeline.dll:UnityEngine.Timeline.ActivationTrack
@@ -166,6 +167,7 @@ bb629cf2901f4f9a6aec0a754789c951 TextMeshPro-2017.3-Runtime.dll:TMPro.TMP_Text
 71bb6a6b6c8f052f948db64c7dd3ca4f Assembly-CSharp.dll:TMPro.Examples.TMP_TextSelector_A
 6181993ab9143a691865d57e9ef67247 Assembly-CSharp.dll:.NumberField
 c12f6929b034322884ced721fca65b10 Assembly-CSharp.dll:TMPro.Examples.TextMeshProFloatingText
+1182c4e3152df15f2489190d86f0ae39 Assembly-CSharp.dll:.ScrollingArea
 71bb6a6b6c8f052f948db64c7dd3ca4f Assembly-CSharp.dll:.MyHandManager
 5bb0c23ac2810973880e592724a69354 Assembly-CSharp.dll:TMPro.Examples.Benchmark02
 71bb6a6b6c8f052f948db64c7dd3ca4f Assembly-CSharp.dll:.UIManager
@@ -190,7 +192,6 @@ d241b953bd96426b51717342bb95894c TextMeshPro-2017.3-Editor.dll:TMPro.EditorUtili
 71bb6a6b6c8f052f948db64c7dd3ca4f Assembly-CSharp.dll:TMPro.TMP_DigitValidator
 71bb6a6b6c8f052f948db64c7dd3ca4f Assembly-CSharp.dll:TMPro.Examples.TeleType
 62fef86270a167c41a606cfca1ecc156 Assembly-CSharp.dll:TMPro.Examples.ShaderPropAnimator
-407d68c5885881ec2befa3da4ba8c575 Assembly-CSharp.dll:.CardsView
 bd3f0ca738703903e759f77536ed74fd Assembly-CSharp.dll:TMPro.Examples.TMP_FrameRateCounter
 71bb6a6b6c8f052f948db64c7dd3ca4f Assembly-CSharp.dll:.DevelopmentCard
 0784d4fd5b93bd75440d01eb2fac4233 Assembly-CSharp.dll:TMPro.Examples.VertexShakeA
@@ -230,13 +231,14 @@ e244702e0dc05782229aa524e4d757f5 Assembly-CSharp.dll:TMPro.Examples.TMP_ExampleS
 71bb6a6b6c8f052f948db64c7dd3ca4f Assembly-CSharp.dll:.Float
 3cae62e09a50c5d5aae8d0536b3d8fde Assembly-CSharp.dll:.ChatController
 5fc094978ce3e3591a7500ed380d854a Unity.Analytics.DataPrivacy.dll:UnityEngine.Analytics.DataPrivacyButton
-71bb6a6b6c8f052f948db64c7dd3ca4f Assembly-CSharp.dll:.NetworkManager
+55340aa1e0de809f361fb5d802b29696 Assembly-CSharp.dll:.NetworkManager
 71bb6a6b6c8f052f948db64c7dd3ca4f Assembly-CSharp.dll:.HandManager
 71bb6a6b6c8f052f948db64c7dd3ca4f Assembly-CSharp.dll:cakeslice.Toggle
 47930f3b40e24ef5b3b5e3d9ada7097a Assembly-CSharp.dll:TMPro.Examples.Benchmark01
 d251bf88db6c95a6b1aa0b69298da9ef UnityEngine.SpatialTracking.dll:UnityEngine.SpatialTracking.TrackedPoseDriver
 71bb6a6b6c8f052f948db64c7dd3ca4f Assembly-CSharp.dll:TMPro.Examples.TextConsoleSimulator
 71bb6a6b6c8f052f948db64c7dd3ca4f Assembly-CSharp.dll:.PlayerInfo
+fee330294b88cd39cc48c902445738e1 Assembly-CSharp.dll:.LobbyManager
 e63944317d2f5958e31963668bb29158 Assembly-CSharp.dll:TMPro.Examples.VertexShakeB
 0769963ca05483a9f7e743b9118b3fba Assembly-CSharp.dll:TMPro.TMP_TextEventHandler
 71bb6a6b6c8f052f948db64c7dd3ca4f Assembly-CSharp.dll:TMPro.Examples.VertexColorCycler

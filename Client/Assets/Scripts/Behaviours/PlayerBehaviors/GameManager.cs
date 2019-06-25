@@ -8,13 +8,14 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
+    public Transform MenuCanvas;
     public Transform Canvas;
     public TextMeshProUGUI OnScreenText;
-    private NetworkManager network;
-    private DiceThrower dice;
-    private Transform devCardsMenu;
-    private HandManager[] cardsInHands;
-    private PlayerInfo[] infos;
+    public NetworkManager network;
+    public DiceThrower dice;
+    public Transform devCardsMenu;
+    public HandManager[] cardsInHands;
+    public PlayerInfo[] infos;
 
     private PlayerColor color;
     private Board board;
@@ -39,29 +40,9 @@ public class GameManager : MonoBehaviour
 
     /// <summary>
     /// Runs as the program starts.
-    /// Initializes the player's variables.
     /// </summary>
     private void Start()
     {
-        network = GetComponent<NetworkManager>();
-        dice = GetComponent<DiceThrower>();
-
-        Canvas = GameObject.Find("Game Canvas").transform;
-        OnScreenText = Canvas.Find("Message").GetComponent<TextMeshProUGUI>();
-        devCardsMenu = Canvas.Find("Development Cards/Cards");
-
-        cardsInHands = new HandManager[4];
-        for (int i = 0; i < 4; i++)
-        {
-            cardsInHands[i] = GameObject.Find("NextPlayer" + i).GetComponent<HandManager>();
-        }
-
-        infos = new PlayerInfo[4];
-        for (int i = 0; i < 4; i++)
-        {
-            infos[i] = Canvas.Find("PlayersInfo/NextPlayer" + i).GetComponent<PlayerInfo>();
-        }
-
         Canvas.Find("V or X/V").GetComponent<Button>().onClick.AddListener(ConfirmPlace);
     }
 
@@ -89,17 +70,38 @@ public class GameManager : MonoBehaviour
         ShowStats.instance.gameObject.SetActive(true);
         foreach (PlayerColor color in Enum.GetValues(typeof(PlayerColor)))
         {
+            PlayerInfo infoObj = GetObj(infos, color);
             if ((int)color < playerAmount)
             {
-                TextMeshProUGUI colorText = GetObj(infos, color).GetInfo(PlayerInfo.Info.Color);
+                if (!ShowStats.instance.PlayerInfos.Contains(infoObj.gameObject))
+                    ShowStats.instance.PlayerInfos.Add(infoObj.gameObject);
+                TextMeshProUGUI colorText = infoObj.GetInfo(PlayerInfo.Info.Color);
                 colorText.SetText(color.ToString());
                 colorText.color = Prefabs.Colors[color].color;
+
+                foreach (PlayerInfo.Info infoType in Enum.GetValues(typeof(PlayerInfo.Info)))
+                {
+                    if (infoType != PlayerInfo.Info.Color)
+                    {
+                        infoObj.GetInfo(infoType).SetText("0");
+                    }
+                }
             }
             else
             {
-                ShowStats.instance.PlayerInfos.Remove(GetObj(infos, color).gameObject);
-                GetObj(infos, color).gameObject.SetActive(false);
+                ShowStats.instance.PlayerInfos.Remove(infoObj.gameObject);
             }
+            infoObj.gameObject.SetActive(false);
+        }
+
+        foreach (DevelopmentCard card in devCardsMenu.Find("Cards").GetComponentsInChildren<DevelopmentCard>())
+        {
+            card.ResetValue();
+        }
+
+        foreach (SoloTrader resource in Canvas.Find("Solo Trade").GetComponentsInChildren<SoloTrader>())
+        {
+            resource.Awake();
         }
 
         board = new Board(network.Deserialize<SerializableBoard>());
@@ -111,7 +113,7 @@ public class GameManager : MonoBehaviour
     /// </summary>
     private void Update()
     {
-        if (network.enabled && network.Available > 0 && !GetComponent<DiceThrower>().Rolling)
+        if (network.Available > 0 && !network.LobbyManager.gameObject.activeInHierarchy && !GetComponent<DiceThrower>().Rolling)
         {
             string data = network.ReadLine();
             if (Enum.TryParse(data, out Message message))
@@ -201,9 +203,18 @@ public class GameManager : MonoBehaviour
     {
         switch (message)
         {
-            case Message.Disconnect:
+            case Message.AssignName:
                 {
-                    network.WriteLine("V");
+                    PlayerColor color = (PlayerColor)Enum.Parse(typeof(PlayerColor), network.ReadLine());
+                    string name = network.ReadLine();
+                    if (color == this.color)
+                        GetObj(infos, color).GetInfo(PlayerInfo.Info.Name).text = "(You) " + name;
+                    else
+                        GetObj(infos, color).GetInfo(PlayerInfo.Info.Name).text = name;
+                    break;
+                }
+            case Message.EndGame:
+                {
                     string reason = network.ReadLine();
                     if (reason != "")
                     {
@@ -553,7 +564,7 @@ public class GameManager : MonoBehaviour
                     {
                         DevCard addCard = (DevCard)Enum.Parse(typeof(DevCard), network.ReadLine());
                         AddDevCardAnim(addCard);
-                        devCardsMenu.Find(addCard.ToString()).GetComponent<DevelopmentCard>().AddCard();
+                        devCardsMenu.Find("Cards/" + addCard.ToString()).GetComponent<DevelopmentCard>().AddCard();
                         OnScreenText.SetText("You got a " + DevelopmentCard.fullNames[addCard] + " card!");
 
                         if (addCard.ToString().StartsWith("Point"))
@@ -1203,11 +1214,40 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Reloads the scene, basically restarts the program.
+    /// Reloads the scene, back to the lobby menu.
     /// Called by UI elements at the end of a game.
     /// </summary>
     public void Reload()
     {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        for (int i = 0; i < Canvas.childCount; i++)
+        {
+            switch (Canvas.GetChild(i).transform.name)
+            {
+                case "TopUI":
+                case "BotUI":
+                case "Message":
+                    break;
+                case "PlayersInfo":
+                    Canvas.GetChild(i).Find("ShowStats").gameObject.SetActive(false);
+                    break;
+                default:
+                    Canvas.GetChild(i).transform.gameObject.SetActive(false);
+                    break;
+            }
+        }
+
+        for (int i = this.transform.childCount - 1; i >=0; i--)
+        {
+            Destroy(this.transform.GetChild(i).gameObject);
+        }
+
+        foreach (HandManager hand in cardsInHands)
+        {
+            hand.DiscardAll();
+        }
+
+        MenuCanvas.gameObject.SetActive(true);
+        MenuCanvas.Find("Lobby").gameObject.SetActive(true);
+        MenuCanvas.Find("Lobby").GetComponent<LobbyManager>().Reload();
     }
 }

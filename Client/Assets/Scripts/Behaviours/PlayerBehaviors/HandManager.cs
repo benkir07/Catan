@@ -139,6 +139,12 @@ public class HandManager : MonoBehaviour
         SyncCardScreen();
     }
 
+    public virtual void DiscardAll()
+    {
+        CardsInHand = 0;
+        SyncCardScreen();
+    }
+
     /// <summary>
     /// Checks whether the vectors are the same or at least very close to each other.
     /// </summary>

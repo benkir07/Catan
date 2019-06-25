@@ -775,7 +775,8 @@ public enum PlayerColor
 
 public enum Message
 {
-    Disconnect,
+    AssignName,
+    EndGame,
     NewTurn,
     StartPlace,
     BuildVillage,
@@ -806,7 +807,13 @@ public enum Message
     Reward,
     NewPort,
     SoloTrade,
-    Win
+    Win,
+    NewLobby,
+    JoinLobby,
+    ExitLobby,
+    UpdateLobby,
+    RemoveLobby,
+    GameStart
 }
 
 public enum TileTypes

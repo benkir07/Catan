@@ -7,10 +7,10 @@ using TMPro;
 
 public class NetworkManager : MonoBehaviour
 {
-    private TcpClient ClientSocket { get; } = new TcpClient();
+    private TcpClient ClientSocket = new TcpClient();
     private StreamReader socketReader;
     private StreamWriter socketWriter;
-    private bool GameStarted = false;
+    public LobbyManager LobbyManager;
 
     public int Available
     {
@@ -21,28 +21,18 @@ public class NetworkManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Runs every tick, waits for server to sign that it's ready for game start.
-    /// </summary>
-    private void Update()
-    {
-        if (ClientSocket.Connected && ClientSocket.Available != 0 && !GameStarted)
-        {
-            if (ReadLine() == "Game Start")
-            {
-                GameObject.Find("Wait Message").SetActive(false);
-                GetComponent<GameManager>().StartGame();
-                GameStarted = true;
-            }
-        }
-    }
-
-    /// <summary>
     /// Connects to the server using parameters on the UI.
     /// Called by UI elements.
     /// </summary>
     public void Connect()
     {
         Transform UI = GameObject.Find("Menu Canvas/Connection").transform;
+        string name = UI.Find("Name").GetComponent<TMP_InputField>().text;
+        if (name.Length == 0)
+        {
+            UI.Find("Errors").GetComponent<TextMeshProUGUI>().text = "Choose a username.";
+            return;
+        }
         string ipString = UI.Find("IP").GetComponent<TMP_InputField>().text;
         if (!IPAddress.TryParse(ipString, out IPAddress ip))
         {
@@ -66,14 +56,28 @@ public class NetworkManager : MonoBehaviour
             {
                 AutoFlush = true
             };
+
+            WriteLine(name);
+
+            string ans = ReadLine();
+            if (ans != "")
+            {
+                UI.Find("Errors").GetComponent<TextMeshProUGUI>().text = ans;
+                ClientSocket.Close();
+                ClientSocket = new TcpClient();
+                return;
+            }
+
+            UI.gameObject.SetActive(false);
+            LobbyManager.gameObject.SetActive(true);
+            LobbyManager.YourName = name;
+            LobbyManager.network = this;
         }
         catch
         {
             UI.Find("Errors").GetComponent<TextMeshProUGUI>().text = "Could not find server at " + ip + ":" + port + System.Environment.NewLine + "Try another address";
             return;
         }
-
-        GameObject.Find("Menu Canvas").SetActive(false);
     }
 
     /// <summary>

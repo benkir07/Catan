@@ -43,6 +43,14 @@ public class DevelopmentCard : MonoBehaviour
             image.color = HasThisCard;
     }
 
+    public void ResetValue()
+    {
+        Amount = 0;
+        AmountText.SetText("0");
+
+        image.color = DoesntHaveThisCard;
+    }
+
     /// <summary>
     /// Add one more of the card.
     /// </summary>

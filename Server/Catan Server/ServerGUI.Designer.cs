@@ -30,13 +30,10 @@
         {
             this.Log = new System.Windows.Forms.ListBox();
             this.LogLabel = new System.Windows.Forms.Label();
-            this.ChoosePlayersPerGame = new System.Windows.Forms.NumericUpDown();
-            this.PlayersAmountLabel = new System.Windows.Forms.Label();
             this.Result1 = new System.Windows.Forms.NumericUpDown();
             this.Result2 = new System.Windows.Forms.NumericUpDown();
             this.ResultsButton = new System.Windows.Forms.Button();
             this.Reset = new System.Windows.Forms.Button();
-            ((System.ComponentModel.ISupportInitialize)(this.ChoosePlayersPerGame)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.Result1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.Result2)).BeginInit();
             this.SuspendLayout();
@@ -60,39 +57,6 @@
             this.LogLabel.Size = new System.Drawing.Size(124, 26);
             this.LogLabel.TabIndex = 5;
             this.LogLabel.Text = "Server Log:";
-            // 
-            // ChoosePlayersPerGame
-            // 
-            this.ChoosePlayersPerGame.AccessibleRole = System.Windows.Forms.AccessibleRole.None;
-            this.ChoosePlayersPerGame.Cursor = System.Windows.Forms.Cursors.Arrow;
-            this.ChoosePlayersPerGame.Location = new System.Drawing.Point(268, 43);
-            this.ChoosePlayersPerGame.Maximum = new decimal(new int[] {
-            4,
-            0,
-            0,
-            0});
-            this.ChoosePlayersPerGame.Minimum = new decimal(new int[] {
-            2,
-            0,
-            0,
-            0});
-            this.ChoosePlayersPerGame.Name = "ChoosePlayersPerGame";
-            this.ChoosePlayersPerGame.Size = new System.Drawing.Size(120, 20);
-            this.ChoosePlayersPerGame.TabIndex = 6;
-            this.ChoosePlayersPerGame.Value = new decimal(new int[] {
-            2,
-            0,
-            0,
-            0});
-            // 
-            // PlayersAmountLabel
-            // 
-            this.PlayersAmountLabel.AutoSize = true;
-            this.PlayersAmountLabel.Location = new System.Drawing.Point(268, 24);
-            this.PlayersAmountLabel.Name = "PlayersAmountLabel";
-            this.PlayersAmountLabel.Size = new System.Drawing.Size(94, 13);
-            this.PlayersAmountLabel.TabIndex = 7;
-            this.PlayersAmountLabel.Text = "Players Per Game:";
             // 
             // Result1
             // 
@@ -171,14 +135,11 @@
             this.Controls.Add(this.ResultsButton);
             this.Controls.Add(this.Result2);
             this.Controls.Add(this.Result1);
-            this.Controls.Add(this.PlayersAmountLabel);
-            this.Controls.Add(this.ChoosePlayersPerGame);
             this.Controls.Add(this.LogLabel);
             this.Controls.Add(this.Log);
             this.Name = "ServerGUI";
             this.Text = "ServerGUI";
             this.Load += new System.EventHandler(this.ServerGUI_Load);
-            ((System.ComponentModel.ISupportInitialize)(this.ChoosePlayersPerGame)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.Result1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.Result2)).EndInit();
             this.ResumeLayout(false);
@@ -189,8 +150,6 @@
         #endregion
         private System.Windows.Forms.ListBox Log;
         private System.Windows.Forms.Label LogLabel;
-        private System.Windows.Forms.NumericUpDown ChoosePlayersPerGame;
-        private System.Windows.Forms.Label PlayersAmountLabel;
         private System.Windows.Forms.NumericUpDown Result1;
         private System.Windows.Forms.NumericUpDown Result2;
         private System.Windows.Forms.Button ResultsButton;
